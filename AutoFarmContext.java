@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import com.premium.game.model.actor.instance.L2ItemInstance;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -7,12 +8,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.premium.game.ai.CtrlIntention;
 import com.premium.game.datatables.xml.SkillTable;
 import com.premium.game.model.L2Object;
 import com.premium.game.model.L2ShortCut;
@@ -27,6 +26,7 @@ import com.premium.game.model.world.Location;
 import com.premium.game.model.zone.L2Zone;
 import com.premium.game.network.ThreadPoolManager;
 import com.premium.game.network.serverpackets.MyTargetSelected;
+import com.premium.game.network.serverpackets.TargetUnselected;
 import com.premium.game.skills.AbnormalEffect;
 import com.premium.game.templates.skills.L2SkillType;
 import com.premium.tools.random.Rnd;
@@ -93,6 +93,10 @@ public class AutoFarmContext
     private Location B;
     private ScheduledFuture<?> T;
     private ScheduledFuture<?> U;
+    private int iAcpHpPercent;
+    private int iAcpMpPercent;
+    private long lastHpPotionUse;
+    private long lastMpPotionUse;
     
     protected static Logger _log = Logger.getLogger(AutoFarmContext.class);
     
@@ -130,7 +134,10 @@ public class AutoFarmContext
 	        this.cw = false;
 	        this.B = null;
 	        this.pl = player;
-	 
+	        this.iAcpHpPercent = 0;
+	        this.iAcpMpPercent = 0;
+	        this.lastHpPotionUse = 0L;
+	        this.lastMpPotionUse = 0L;
     }
     
     private static boolean a(final L2Skill skill) {
@@ -139,6 +146,26 @@ public class AutoFarmContext
     
     private static boolean b(final L2Skill skill) {
         return skill.getSkillType() == L2SkillType.HEAL || skill.getSkillType() == L2SkillType.HEAL_PERCENT;
+    }
+    
+    private void applyFastReuse(final L2PcInstance player, final L2Skill skill) {
+        if (player == null || skill == null) {
+            return;
+        }
+        // Fast skill reuse - enable skill immediately if configured at 100%
+        if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
+            player.enableSkill(skill.getId());
+        }
+    }
+    
+    private void applyFastReuseSummon(final L2Summon summon, final L2Skill skill) {
+        if (summon == null || skill == null) {
+            return;
+        }
+        // Fast skill reuse for summon - enable skill immediately if configured at 100%
+        if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
+            summon.enableSkill(skill.getId());
+        }
     }
     
     public L2Playable getP() {
@@ -280,6 +307,8 @@ public class AutoFarmContext
         this.setUseSummonSkills(pp.getVarB("farmUseSummonSkills", false), true);
         this.setAssistMonsterAttack(pp.getVarB("farmAssistMonsterAttack", false), true);
         this.setTargetRestoreMp(pp.getVarB("farmTargetRestoreMp", false), true);
+        this.setAcpHpPercent(pp.getVarInt("acpHpPercent", 0));
+        this.setAcpMpPercent(pp.getVarInt("acpMpPercent", 0));
         this.D(player.getActingPlayer());
     }
     
@@ -541,7 +570,7 @@ public class AutoFarmContext
             player.sendMessage("AUTO HUNTING PROHIBITED CW.");
             return;
         }
-        if (!AutoFarmConfig.AUTO_FARM_LIMIT_ZONE_NAMES.isEmpty()) {
+        if (AutoFarmConfig.AUTO_FARM_LIMIT_ZONE_NAMES != null && !AutoFarmConfig.AUTO_FARM_LIMIT_ZONE_NAMES.isEmpty()) {
             final Iterator<L2Zone> iterator = player.getZones().iterator();
             while (iterator.hasNext()) {
                 if (!AutoFarmConfig.AUTO_FARM_LIMIT_ZONE_NAMES.contains(iterator.next().getName())) {
@@ -621,7 +650,7 @@ public class AutoFarmContext
                 break;
             }
         }
-        final boolean b = AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip();
+        final boolean b = AutoFarmConfig.AUTO_FARM_FREE || (AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip());
         if (AutoFarmConfig.FARM_ONLINE_TYPE && !b) {
             final long n = player.getVarLong("activeFarmOnlineTask", 0L) - this.getLastFarmOnlineTime();
             try {
@@ -635,11 +664,12 @@ public class AutoFarmContext
             this.U = ThreadPoolManager.getInstance().scheduleGeneral(new AutoFarmEndTask(this), n);
             this.setFarmOnlineTime();
         }
-        if (AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != AbnormalEffect.NULL) {
+        if (AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != null && AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != AbnormalEffect.NULL) {
             player.startAbnormalEffect(AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL);
         }
         if (AutoFarmConfig.SERVICE_AUTO_FARM_SET_RED_RING) {
             player.setTeam(2);
+            player.broadcastUserInfo();
         }
         player.setIsAuto(true);
         player.sendMessage("Auto-farming activated");
@@ -647,7 +677,7 @@ public class AutoFarmContext
     
     public void stopFarmTask(final boolean b) {
         final L2PcInstance player = getP().getActingPlayer();
-        if (player == null || !this.isAutofarming() || !AutoFarmConfig.ALLOW_AUTO_FARM) {
+        if (player == null || !AutoFarmConfig.ALLOW_AUTO_FARM) {
             return;
         }
         try {
@@ -659,7 +689,7 @@ public class AutoFarmContext
         catch (Exception ex) {
         	ex.printStackTrace();
         }
-        final boolean b2 = AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip();
+        final boolean b2 = AutoFarmConfig.AUTO_FARM_FREE || (AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip());
         if (AutoFarmConfig.FARM_ONLINE_TYPE && !b2) {
             try {
                 if (this.U != null) {
@@ -675,12 +705,18 @@ public class AutoFarmContext
         }
     
         AutoFarmManager.getInstance().removeActiveFarm(player.getHost(), player.getObjectId());
-        if (AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != AbnormalEffect.NULL) {
+        if (AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != null && AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL != AbnormalEffect.NULL) {
             player.stopAbnormalEffect(AutoFarmConfig.SERVICES_AUTO_FARM_ABNORMAL);
         }
         if (AutoFarmConfig.SERVICE_AUTO_FARM_SET_RED_RING) {
             player.setTeam(0);
+            player.broadcastUserInfo();
         }
+        player.setTarget(null);
+        player.sendPacket(new TargetUnselected(player));
+        player.getAI().setIntention(CtrlIntention.ACTIVE);
+        player.abortAttack();
+        player.abortCast();
         player.setIsAuto(false);
         player.sendMessage("Auto-farming deactivated.");
         if (b) {
@@ -735,7 +771,7 @@ public class AutoFarmContext
     
     public boolean isActiveAutofarm() {
         final L2PcInstance player = getP().getActingPlayer();
-        return player != null && (this.U != null || AutoFarmConfig.AUTO_FARM_FREE || (AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip()) || (AutoFarmConfig.FARM_ONLINE_TYPE && this.isActiveFarmOnlineTime()));
+        return player != null && (player.isGM() || this.U != null || AutoFarmConfig.AUTO_FARM_FREE || (AutoFarmConfig.PREMIUM_FARM_FREE && player.isVip()) || (AutoFarmConfig.FARM_ONLINE_TYPE && this.isActiveFarmOnlineTime()));
     }
     
     public boolean isActiveFarmTask() {
@@ -1036,52 +1072,45 @@ public class AutoFarmContext
     }
     
     public L2Skill nextAttackSkill(final L2MonsterInstance target, final long n) {
+    	
         final L2PcInstance player = getP().getActingPlayer();
 
-        if (player == null || this.getAttackSpells().isEmpty() || 
-            (this.isExtraDelaySkill() && n > System.currentTimeMillis()) ||
-            player.getCurrentMpPercents() < (this.getAttackPercent() / 2)) {
+        if (player == null || this.getAttackSpells().isEmpty() || !Rnd.chance(this.getAttackChance())) {
             return null;
         }
-
-        // Cache de skills por 5 segundos
-        String cacheKey = "attack_skills_" + player.getObjectId();
-        if (skillCache.containsKey(cacheKey)) {
-            CachedSkill cached = skillCache.get(cacheKey);
-            if (!cached.isExpired()) {
-                return cached.skill;
-            }
+        if (this.isExtraDelaySkill() && n > System.currentTimeMillis()) {
+            return null;
+        }
+        if (player.getCurrentMpPercents() < this.getAttackPercent()) {
+            return null;
+        }
+        if (this.isRndAttackSkills()) {
+            return this.aba(target);
         }
         
-        if (this.isRndAttackSkills()) {
-            L2Skill skill = this.aba(target);
-            if (skill != null) {
-                skillCache.put(cacheKey, new CachedSkill(skill));
+        final Iterator<Integer> iterator = this.getAttackSpells().iterator();
+        while (iterator.hasNext()) {
+            final L2Skill knownSkill = player.getKnownSkill(iterator.next());
+            if (knownSkill == null) {
+                continue;
             }
-            return skill;
-        }
+            // Apply fast skill reuse before checking condition (non-random mode)
+            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
+                applyFastReuse(player, knownSkill);
+            }
+            if (!knownSkill.checkCondition(player, target)) {
+                continue;
+            }
+            if (knownSkill.isOffensive() && knownSkill.getTargetType() == L2Skill.SkillTargetType.TARGET_ONE && target == null) {
+                continue;
+            }
 
-        // Otimização: Usar stream para processamento paralelo em listas grandes
-        Optional<L2Skill> skill = this.getAttackSpells().parallelStream()
-            .map(player::getKnownSkill)
-            .filter(s -> s != null && 
-                        s.checkCondition(player, target) &&
-                        (!s.isOffensive() || 
-                         s.getTargetType() != L2Skill.SkillTargetType.TARGET_ONE || 
-                         target != null))
-            .findFirst();
-
-        if (skill.isPresent()) {
             assert target != null;
             player.setTarget(target);
-            player.sendPacket(new MyTargetSelected(target.getObjectId(), 
-                player.getLevel() - target.getLevel()));
+            player.sendPacket(new MyTargetSelected(target.getObjectId(), player.getLevel() - target.getLevel()));
             player.sendPacket(target.makeStatusUpdate(9, 10));
-            
-            skillCache.put(cacheKey, new CachedSkill(skill.get()));
-            return skill.get();
+            return knownSkill;
         }
-
         return null;
     }
     
@@ -1152,6 +1181,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
+            // Apply fast skill reuse before checking condition
+            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
+                applyFastReuse(player, knownSkill);
+            }
             if (!knownSkill.checkCondition(player, npcInstance)) {
                 continue;
             }
@@ -1218,6 +1251,10 @@ public class AutoFarmContext
             final L2Skill knownSkill = player.getKnownSkill(intValue);
             if (knownSkill == null) {
                 continue;
+            }
+            // Apply fast skill reuse before checking condition
+            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
+                applyFastReuse(player, knownSkill);
             }
             if (!knownSkill.checkCondition((L2Character)player, (target != null) ? target : player)) {
                 continue;
@@ -1313,6 +1350,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
+            // Apply fast skill reuse before checking condition
+            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
+                applyFastReuse(player, knownSkill);
+            }
             if (!knownSkill.checkCondition(player, knownSkill.isOffensive() ? npcInstance : player)) {
                 continue;
             }
@@ -1397,6 +1438,9 @@ public class AutoFarmContext
                     if (!b2) {
                         continue;
                     }
+                    if (knownSkill.getTargetType() == L2Skill.SkillTargetType.TARGET_PET) {
+                        continue;
+                    }
                     list.add(knownSkill);
                 }
             }
@@ -1449,6 +1493,10 @@ public class AutoFarmContext
   
             if (availableSkillLevel > 0) {
                 final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
+                // Apply fast skill reuse for summon before checking condition
+                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && summon.isSkillDisabled(info.getId())) {
+                    applyFastReuseSummon(summon, info);
+                }
                 if (!info.checkCondition(summon, npcInstance)) {
                     continue;
                 }
@@ -1498,6 +1546,10 @@ public class AutoFarmContext
             final int availableSkillLevel = summon.getAllSkills().length;
             if (availableSkillLevel > 0) {
                 final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
+                // Apply fast skill reuse for summon before checking condition
+                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && summon.isSkillDisabled(info.getId())) {
+                    applyFastReuseSummon(summon, info);
+                }
                 if (!info.checkCondition(summon, (target != null) ? target : summon)) {
                     continue;
                 }
@@ -1584,6 +1636,10 @@ public class AutoFarmContext
             final int availableSkillLevel = target.getAllSkills().length;
             if (availableSkillLevel > 0) {
                 final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
+                // Apply fast skill reuse for summon before checking condition
+                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && target.isSkillDisabled(info.getId())) {
+                    applyFastReuseSummon(target, info);
+                }
                 if (!info.checkCondition(target, (L2Character != null && b) ? L2Character : target)) {
                     continue;
                 }
@@ -1689,7 +1745,7 @@ public class AutoFarmContext
     
     public L2MonsterInstance getLeaderTarget(final L2PcInstance player) {
         final L2Object target = player.getTarget();
-        if (target != null && target != player && target instanceof L2NpcInstance && ((L2NpcInstance)target).hasAI() && (target.getActingPlayer().getAttackByList().contains(player))) {
+        if (target != null && target != player && target instanceof L2NpcInstance && !((L2NpcInstance)target).isDead() && ((L2NpcInstance)target).hasAI() && (target.getActingPlayer().getAttackByList().contains(player))) {
             return (L2MonsterInstance) target;
         }
         return null;
@@ -1715,6 +1771,74 @@ public class AutoFarmContext
         return this.bq;
     }
     
+    public int getAcpHpPercent() {
+        return this.iAcpHpPercent;
+    }
+    
+    public void setAcpHpPercent(int percent) {
+        this.iAcpHpPercent = Math.max(0, Math.min(100, percent));
+        this.b("acpHpPercent", this.iAcpHpPercent);
+    }
+    
+    public int getAcpMpPercent() {
+        return this.iAcpMpPercent;
+    }
+    
+    public void setAcpMpPercent(int percent) {
+        this.iAcpMpPercent = Math.max(0, Math.min(100, percent));
+        this.b("acpMpPercent", this.iAcpMpPercent);
+    }
+    
+    public void checkAndUsePotions(final L2PcInstance player) {
+        if (player == null || player.isDead()) {
+            return;
+        }
+        final long now = System.currentTimeMillis();
+        
+        // HP Potion Check
+        if (this.iAcpHpPercent > 0) {
+            double currentHpPerc = player.getCurrentHpPercents();
+            if (currentHpPerc <= this.iAcpHpPercent) {
+                if (now - this.lastHpPotionUse >= 1000) {
+                    boolean success = usePotion(player, AutoFarmConfig.ACP_HP_POTION_IDS);
+                    if (success) {
+                        this.lastHpPotionUse = now;
+                    }
+                }
+            }
+        }
+        
+        // MP Potion Check
+        if (this.iAcpMpPercent > 0) {
+            double currentMpPerc = player.getCurrentMpPercents();
+            if (currentMpPerc <= this.iAcpMpPercent) {
+                if (now - this.lastMpPotionUse >= 1000) {
+                    boolean success = usePotion(player, AutoFarmConfig.ACP_MP_POTION_IDS);
+                    if (success) {
+                        this.lastMpPotionUse = now;
+                    }
+                }
+            }
+        }
+    }
+    
+    private boolean usePotion(final L2PcInstance player, final int[] potionIds) {
+        if (potionIds == null) {
+            return false;
+        }
+        for (final int itemId : potionIds) {
+            final L2ItemInstance item = player.getInventory().getItemByItemId(itemId);
+            if (item != null && item.getCount() > 0) {
+                final com.premium.game.handler.IItemHandler handler = com.premium.game.handler.ItemHandler.getInstance().getItemHandler(itemId);
+                if (handler != null) {
+                    handler.useItem(player, item);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     public enum SpellType
     {
         ATTACK, 
@@ -1722,21 +1846,4 @@ public class AutoFarmContext
         SELF, 
         LOWLIFE;
     }
-
-    // Cache de skills
-    private static class CachedSkill {
-        final L2Skill skill;
-        final long expirationTime;
-        
-        CachedSkill(L2Skill skill) {
-            this.skill = skill;
-            this.expirationTime = System.currentTimeMillis() + 5000; // 5 segundos
-        }
-        
-        boolean isExpired() {
-            return System.currentTimeMillis() > expirationTime;
-        }
-    }
-    
-    private static final Map<String, CachedSkill> skillCache = new ConcurrentHashMap<>();
 }

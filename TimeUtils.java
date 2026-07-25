@@ -1,20 +1,8 @@
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.premium.game.util.Util;
-import com.premium.game.model.L2MonsterInstance;
-import com.premium.game.model.L2World;
-import com.premium.game.model.L2Skill;
 
 public class TimeUtils {
   private static final SimpleDateFormat Pu = new SimpleDateFormat("HH:mm dd.MM.yyyy");
@@ -101,98 +89,4 @@ public class TimeUtils {
   public static long parse(String paramString) throws ParseException {
     return Pu.parse(paramString).getTime();
   }
-
-  public final List<L2MonsterInstance> getAroundNpc() {
-    // Implementar cache de alvos próximos
-    if (targetCache.isValid()) {
-        return targetCache.getTargets();
-    }
-    
-    // Otimizar busca usando QuadTree ou estrutura espacial
-    List<L2MonsterInstance> targets = new ArrayList<>();
-    L2World.getVisibleObjects(player, getFarmRadius())
-        .stream()
-        .filter(this::isValidTarget)
-        .sorted(Comparator.comparingDouble(this::getTargetPriority))
-        .limit(MAX_TARGETS)
-        .forEach(targets::add);
-        
-    targetCache.update(targets);
-    return targets;
-  }
-
-  // Implementar limpeza periódica de cache
-  private void cleanupCache() {
-    // Limpar caches não utilizados
-    skillCooldowns.entrySet().removeIf(entry -> 
-        System.currentTimeMillis() - entry.getValue() > MAX_CACHE_TIME);
-    
-    // Limpar alvos obsoletos
-    if (getCommittedTarget() != null && getCommittedTarget().isDead()) {
-        setCommittedTarget(null);
-    }
-  }
-
-  protected boolean doTryUseAttackSkillSpell() {
-    L2Skill skill = getAutoFarmContext().nextAttackSkill(getCommittedTarget(), getExtraDelay());
-    if (skill != null && !skill.isInReuse()) {
-        long lastUseTime = skillCooldowns.getOrDefault(skill.getId(), 0L);
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastUseTime >= skill.getReuseDelay()) {
-            useMagicSkill(skill, false);
-            skillCooldowns.put(skill.getId(), currentTime);
-            return true;
-        }
-    }
-    return false;
-  }
-}
-
-public class BaseFarmTask {
-    private static final int MAX_CONSECUTIVE_FAILURES = 3;
-    private int consecutiveFailures = 0;
-    
-    protected void handleTaskExecution() {
-        try {
-            // Adicionar timeout para operações
-            CompletableFuture.runAsync(() -> runImpl())
-                .orTimeout(5, TimeUnit.SECONDS)
-                .exceptionally(e -> {
-                    handleFailure();
-                    return null;
-                });
-        } catch (Exception e) {
-            handleFailure();
-        }
-    }
-    
-    private void handleFailure() {
-        consecutiveFailures++;
-        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-            // Forçar pausa para recuperação
-            getAutoFarmContext().pauseFarming(1);
-            consecutiveFailures = 0;
-        }
-    }
-}
-
-public class AutoFarmContext {
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final Map<Integer, SkillUsageStats> skillStats = new ConcurrentHashMap<>();
-    
-    // Monitorar uso de recursos
-    public void trackResourceUsage() {
-        scheduler.scheduleAtFixedRate(() -> {
-            // Verificar memória
-            if (Runtime.getRuntime().freeMemory() < MINIMUM_FREE_MEMORY) {
-                System.gc();
-                pauseFarming(1);
-            }
-            
-            // Verificar CPU
-            if (getCPUUsage() > MAX_CPU_USAGE) {
-                pauseFarming(1);
-            }
-        }, 1, 1, TimeUnit.MINUTES);
-    }
 }

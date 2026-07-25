@@ -103,14 +103,29 @@ public final class AutoFarmManager {
 		calendar.add(5, 1);
 		ServerData.getInstance().getData().set("Farm_FreeTime", calendar.getTimeInMillis());
 		Connection connection = null;
+		PreparedStatement statement = null;
 		try {
 			connection = L2DatabaseFactory.getInstance().getConnection();
-			PreparedStatement statement = connection.prepareStatement("DELETE FROM character_variables WHERE name = ?");
+			statement = connection.prepareStatement("DELETE FROM character_variables WHERE name = ?");
 			statement.setString(1, "farmFreeTime");
 			statement.execute();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			_log.error("Error clearing farm free time: " + e.getMessage(), e);
+		} finally {
+			try {
+				if (statement != null) {
+					statement.close();
+				}
+			} catch (SQLException e) {
+				_log.error("Error closing statement: " + e.getMessage(), e);
+			}
+			try {
+				if (connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				_log.error("Error closing connection: " + e.getMessage(), e);
+			}
 		}
 
 		for (L2PcInstance player : L2World.getInstance().getAllPlayers()) {

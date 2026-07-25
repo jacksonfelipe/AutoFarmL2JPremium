@@ -58,11 +58,13 @@ public class AutoFarmConfig {
 
 	public static int SUMMON_HEAL_SKILL_PERCENT;
 
-	public static long SKILLS_EXTRA_DELAY = Long.parseLong(exProperties.getProperty("SkillsExtraDelay", "5")) * 1000L;
+	public static long SKILLS_EXTRA_DELAY;
 
-	public static long KEEP_LOCATION_DELAY = Long.parseLong(exProperties.getProperty("KeepLocationDelay", "5")) * 1000L;
+	public static int FAST_SKILL_REUSE;
 
-	public static long RUN_CLOSE_UP_DELAY = Long.parseLong(exProperties.getProperty("RunCloseUpDelay", "2")) * 1000L;
+	public static long KEEP_LOCATION_DELAY;
+
+	public static long RUN_CLOSE_UP_DELAY;
 
 	public static int RUN_CLOSE_UP_DISTANCE;
 
@@ -88,52 +90,22 @@ public class AutoFarmConfig {
 
 	public static int[] AUTO_FARM_IGNORED_NPC_ID;
 
-	public static AbnormalEffect SERVICES_AUTO_FARM_ABNORMAL;
+	public static int[] ACP_HP_POTION_IDS;
+
+	public static int[] ACP_MP_POTION_IDS;
+
+	public static AbnormalEffect SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect.NULL;
 
 	public static boolean SERVICE_AUTO_FARM_SET_RED_RING;
 
-	public static Set<String> AUTO_FARM_LIMIT_ZONE_NAMES;
+	public static Set<String> AUTO_FARM_LIMIT_ZONE_NAMES = new HashSet<>();
 
 	public static String LICENSE_CODE;
-
-	// Sistema de Cache e Performance
-	public static boolean USE_DYNAMIC_DELAYS = true;
-	public static boolean USE_TARGET_CACHE = true;
-	public static int TARGET_CACHE_DURATION_MS = 5000;
-	public static int MAX_CACHED_TARGETS = 100;
-	
-	// Delays Dinâmicos
-	public static int MIN_SKILLS_DELAY = 1000;
-	public static int MAX_SKILLS_DELAY = 5000;
-	public static int MIN_LOCATION_DELAY = 1000;
-	public static int MAX_LOCATION_DELAY = 5000;
-	
-	// Configuração de Busca Espacial
-	public static int MIN_SEARCH_DISTANCE = 500;
-	public static int MAX_SEARCH_DISTANCE = 3000;
-	public static int SEARCH_PARTITION_SIZE = 500;
-	
-	// Sistema de Perfis
-	public static boolean ENABLE_FARM_PROFILES = true;
-	public static int MAX_PROFILES_PER_PLAYER = 5;
-	
-	// Sistema de Relatórios
-	public static boolean ENABLE_FARM_REPORTS = true;
-	public static int REPORT_INTERVAL_MINUTES = 30;
-	
-	// Sistema de Party/Guild
-	public static boolean ENABLE_PARTY_SYNC = true;
-	public static boolean ENABLE_GUILD_REPORTS = true;
 
 	public static void load() {
 
 		try {
 			L2Properties exProperties = new L2Properties(AUTO_FARM_CONFIG_FILE);
-
-			if (exProperties == null) {
-				_log.error("Failed to load " + AUTO_FARM_CONFIG_FILE);
-				return;
-			}
 
 			LICENSE_CODE = exProperties.getProperty("ProtectKey", "");
 			ALLOW_AUTO_FARM = Boolean.parseBoolean(exProperties.getProperty("AllowAutoFarm", "True"));
@@ -172,6 +144,10 @@ public class AutoFarmConfig {
 			SEARCH_DISTANCE = Integer.parseInt(exProperties.getProperty("SearchDistance", "3000"));
 			FARM_TYPE = Integer.parseInt(exProperties.getProperty("AutoFarmType", "0"));
 			FARM_INTERVAL_TASK = Integer.parseInt(exProperties.getProperty("AutoFarmIntervalTask", "600"));
+			SKILLS_EXTRA_DELAY = Long.parseLong(exProperties.getProperty("SkillsExtraDelay", "5")) * 1000L;
+			FAST_SKILL_REUSE = Integer.parseInt(exProperties.getProperty("FastSkillReuse", "90"));
+			KEEP_LOCATION_DELAY = Long.parseLong(exProperties.getProperty("KeepLocationDelay", "5")) * 1000L;
+			RUN_CLOSE_UP_DELAY = Long.parseLong(exProperties.getProperty("RunCloseUpDelay", "2")) * 1000L;
 			RUN_CLOSE_UP_DISTANCE = Integer.parseInt(exProperties.getProperty("RunCloseUpDistance", "100"));
 			ALLOW_FARM_FREE_TIME = Boolean.parseBoolean(exProperties.getProperty("AllowFarmFreeTime", "False"));
 			REFRESH_FARM_TIME = Boolean.parseBoolean(exProperties.getProperty("AllowRefreshFarmTime", "False"));
@@ -179,99 +155,55 @@ public class AutoFarmConfig {
 			ALLOW_CHECK_HWID_LIMIT = Boolean.parseBoolean(exProperties.getProperty("AllowCheckHwidLimits", "False"));
 			FARM_ACTIVE_LIMITS = Integer.parseInt(exProperties.getProperty("FarmActiveLimits", "3"));
 
-			String[] npcs = exProperties.getProperty("AutoFarmIgnoreMobIds", "").split(",");
+			
+			String[] npcs = exProperties.getProperty("AutoFarmIgnoreMobIds").split(",");
 
-			if (npcs.length > 0 && !npcs[0].isEmpty()) {
-				AUTO_FARM_IGNORED_NPC_ID = new int[npcs.length];
-				for (int i = 0; i < npcs.length; i++) {
-					try {
-						AUTO_FARM_IGNORED_NPC_ID[i] = Integer.parseInt(npcs[i].trim());
-					} catch (NumberFormatException e) {
-						_log.warn("Invalid NPC ID in AutoFarmIgnoreMobIds: " + npcs[i]);
-						AUTO_FARM_IGNORED_NPC_ID[i] = 0;
-					}
-				}
-			} else {
-				AUTO_FARM_IGNORED_NPC_ID = new int[0];
+			AUTO_FARM_IGNORED_NPC_ID = new int[npcs.length];
+			for (int i = 0; i < npcs.length; i++) {
+				AUTO_FARM_IGNORED_NPC_ID[i] = Integer.parseInt(npcs[i]);
 			}
 
-			SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect
-					.getByName(exProperties.getProperty("AutoFarmAbnormalEffectName", "null"));
+			String abnormalEffectName = exProperties.getProperty("AutoFarmAbnormalEffectName", "null");
+			// "dummy", "null", "none" or empty = no effect
+			if (abnormalEffectName == null || abnormalEffectName.isEmpty() || 
+				abnormalEffectName.equalsIgnoreCase("null") || 
+				abnormalEffectName.equalsIgnoreCase("none") ||
+				abnormalEffectName.equalsIgnoreCase("dummy")) {
+				SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect.NULL;
+			} else {
+				try {
+					SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect.getByName(abnormalEffectName);
+				} catch (Exception e) {
+					SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect.NULL;
+				}
+			}
 
 			SERVICE_AUTO_FARM_SET_RED_RING = Boolean
 					.parseBoolean(exProperties.getProperty("AutoFarmSetRedRing", "false"));
 			AUTO_FARM_LIMIT_ZONE_NAMES = new HashSet<>(Arrays.asList(
 					exProperties.getProperty("AutoFarmProhibitedZones", "[giran_town_peace1],[giran_town_peace2]")));
-			String[] limitPriceArray = exProperties.getProperty("FarmExpendLimitPrice", "4037,1").split(",");
+			String[] arrayOfString2 = exProperties.getProperty("FarmExpendLimitPrice", "4037,1").split(",");
 
-			if (limitPriceArray.length >= 2) {
-				try {
-					FARM_EXPEND_LIMIT_PRICE[0] = Integer.parseInt(limitPriceArray[0].trim());
-					FARM_EXPEND_LIMIT_PRICE[1] = Integer.parseInt(limitPriceArray[1].trim());
-				} catch (NumberFormatException e) {
-					_log.warn("Invalid FarmExpendLimitPrice format. Using defaults: 4037,1");
-					FARM_EXPEND_LIMIT_PRICE[0] = 4037;
-					FARM_EXPEND_LIMIT_PRICE[1] = 1;
-				}
-			} else {
-				_log.warn("Invalid FarmExpendLimitPrice format. Using defaults: 4037,1");
-				FARM_EXPEND_LIMIT_PRICE[0] = 4037;
-				FARM_EXPEND_LIMIT_PRICE[1] = 1;
+			FARM_EXPEND_LIMIT_PRICE[0] = Integer.parseInt(arrayOfString2[0]);
+			FARM_EXPEND_LIMIT_PRICE[1] = Integer.parseInt(arrayOfString2[1]);
+
+			String[] hpPotions = exProperties.getProperty("AcpHpPotionIds", "1540,1539,1060,8627,8626,8625,8624,8623,8622").split(",");
+			ACP_HP_POTION_IDS = new int[hpPotions.length];
+			for (int i = 0; i < hpPotions.length; i++) {
+				ACP_HP_POTION_IDS[i] = Integer.parseInt(hpPotions[i].trim());
 			}
 
-			// Carregando novas configurações
-			USE_DYNAMIC_DELAYS = Boolean.parseBoolean(exProperties.getProperty("UseDynamicDelays", "true"));
-			USE_TARGET_CACHE = Boolean.parseBoolean(exProperties.getProperty("UseTargetCache", "true"));
-			TARGET_CACHE_DURATION_MS = Integer.parseInt(exProperties.getProperty("TargetCacheDuration", "5000"));
-			MAX_CACHED_TARGETS = Integer.parseInt(exProperties.getProperty("MaxCachedTargets", "100"));
-			
-			MIN_SKILLS_DELAY = Integer.parseInt(exProperties.getProperty("MinSkillsDelay", "1000"));
-			MAX_SKILLS_DELAY = Integer.parseInt(exProperties.getProperty("MaxSkillsDelay", "5000"));
-			MIN_LOCATION_DELAY = Integer.parseInt(exProperties.getProperty("MinLocationDelay", "1000"));
-			MAX_LOCATION_DELAY = Integer.parseInt(exProperties.getProperty("MaxLocationDelay", "5000"));
-			
-			MIN_SEARCH_DISTANCE = Integer.parseInt(exProperties.getProperty("MinSearchDistance", "500"));
-			MAX_SEARCH_DISTANCE = Integer.parseInt(exProperties.getProperty("MaxSearchDistance", "3000"));
-			SEARCH_PARTITION_SIZE = Integer.parseInt(exProperties.getProperty("SearchPartitionSize", "500"));
-			
-			ENABLE_FARM_PROFILES = Boolean.parseBoolean(exProperties.getProperty("EnableFarmProfiles", "true"));
-			MAX_PROFILES_PER_PLAYER = Integer.parseInt(exProperties.getProperty("MaxProfilesPerPlayer", "5"));
-			
-			ENABLE_FARM_REPORTS = Boolean.parseBoolean(exProperties.getProperty("EnableFarmReports", "true"));
-			REPORT_INTERVAL_MINUTES = Integer.parseInt(exProperties.getProperty("ReportIntervalMinutes", "30"));
-			
-			ENABLE_PARTY_SYNC = Boolean.parseBoolean(exProperties.getProperty("EnablePartySync", "true"));
-			ENABLE_GUILD_REPORTS = Boolean.parseBoolean(exProperties.getProperty("EnableGuildReports", "true"));
+			String[] mpPotions = exProperties.getProperty("AcpMpPotionIds", "728,726,8639,8638,8637,8636,8635,8634").split(",");
+			ACP_MP_POTION_IDS = new int[mpPotions.length];
+			for (int i = 0; i < mpPotions.length; i++) {
+				ACP_MP_POTION_IDS[i] = Integer.parseInt(mpPotions[i].trim());
+			}
 
-		} catch (Exception e) {
-			_log.error("Error loading AutoFarm config: " + e.getMessage(), e);
-			setDefaultValues();
+		 } catch (Exception e) {
+			_log.error(e.getMessage(), e);
+			_log.info("AutoFarmPremium: Error while reading config", e);
+
 		}
-	}
 
-	private static void setDefaultValues() {
-		SKILLS_EXTRA_DELAY = 5000L;
-		KEEP_LOCATION_DELAY = 5000L;
-		RUN_CLOSE_UP_DELAY = 2000L;
-		AUTO_FARM_IGNORED_NPC_ID = new int[0];
-		FARM_EXPEND_LIMIT_PRICE = new int[]{4037, 1};
-		ALLOW_AUTO_FARM = true;
-		FARM_ONLINE_TYPE = true;
-		AUTO_FARM_FOR_PREMIUM = false;
-		AUTO_FARM_FREE = true;
-		PREMIUM_FARM_FREE = true;
-		ALLOW_FARM_FREE_TIME = false;
-		REFRESH_FARM_TIME = false;
-		FARM_FREE_TIME = 3;
-		ALLOW_CHECK_HWID_LIMIT = false;
-		FARM_ACTIVE_LIMITS = 3;
-		SHORTCUT_PAGE = 10;
-		SEARCH_DISTANCE = 3000;
-		FARM_TYPE = 0;
-		FARM_INTERVAL_TASK = 600;
-		RUN_CLOSE_UP_DISTANCE = 100;
-		SERVICE_AUTO_FARM_SET_RED_RING = false;
-		SERVICES_AUTO_FARM_ABNORMAL = null;
-		AUTO_FARM_LIMIT_ZONE_NAMES = new HashSet<>(Arrays.asList("[giran_town_peace1],[giran_town_peace2]"));
 	}
 }

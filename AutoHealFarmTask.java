@@ -36,6 +36,7 @@ public class AutoHealFarmTask extends BaseFarmTask implements Runnable {
       return; 
     if (getCommittedOwner() != null && player.getDistance(getCommittedOwner().getX(), getCommittedOwner().getY()) > 200) {
       player.setTarget(null);
+      player.sendPacket(new com.premium.game.network.serverpackets.TargetUnselected(player));
       Location location = Location.findPointToStay(getCommittedOwner().getLoc(), 100, 200);
       if (location != null)
         player.moveToLocation(location.getX(), location.getY(), location.getZ(), 0); 

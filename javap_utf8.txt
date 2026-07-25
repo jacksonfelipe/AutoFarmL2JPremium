@@ -1,0 +1,897 @@
+﻿Compiled from "UseItem.java"
+public final class com.premium.game.network.clientpackets.UseItem extends com.premium.game.network.clientpackets.L2GameClientPacket {
+  public com.premium.game.network.clientpackets.UseItem();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method com/premium/game/network/clientpackets/L2GameClientPacket."<init>":()V
+       4: return
+
+  protected void readImpl();
+    Code:
+       0: aload_0
+       1: aload_0
+       2: invokevirtual #2                  // Method readD:()I
+       5: putfield      #3                  // Field _objectId:I
+       8: return
+
+  protected void runImpl();
+    Code:
+       0: aload_0
+       1: invokevirtual #4                  // Method getClient:()Lcom/premium/mmocore/MMOClient;
+       4: checkcast     #5                  // class com/premium/game/network/L2GameClient
+       7: invokevirtual #6                  // Method com/premium/game/network/L2GameClient.getActiveChar:()Lcom/premium/game/model/actor/instance/L2PcInstance;
+      10: astore_1
+      11: aload_1
+      12: ifnonnull     16
+      15: return
+      16: aload_1
+      17: invokevirtual #7                  // Method com/premium/game/model/actor/instance/L2PcInstance.isOutOfControl:()Z
+      20: ifeq          24
+      23: return
+      24: aload_1
+      25: invokevirtual #8                  // Method com/premium/game/model/actor/instance/L2PcInstance.getPrivateStoreType:()I
+      28: ifeq          46
+      31: aload_1
+      32: getstatic     #9                  // Field com/premium/game/network/SystemMessageId.NOT_USE_ITEMS_IN_PRIVATE_STORE:Lcom/premium/game/network/SystemMessageId;
+      35: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+      38: aload_1
+      39: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+      42: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      45: return
+      46: aload_1
+      47: invokevirtual #13                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSecondRefusal:()Z
+      50: ifeq          61
+      53: aload_1
+      54: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+      57: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      60: return
+      61: aload_1
+      62: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.getActiveTradeList:()Lcom/premium/game/model/TradeList;
+      65: ifnull        79
+      68: aload_1
+      69: getstatic     #15                 // Field com/premium/game/network/SystemMessageId.CANNOT_PICKUP_OR_USE_ITEM_WHILE_TRADING:Lcom/premium/game/network/SystemMessageId;
+      72: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+      75: aload_1
+      76: invokevirtual #16                 // Method com/premium/game/model/actor/instance/L2PcInstance.cancelActiveTrade:()V
+      79: aload_1
+      80: iconst_1
+      81: putfield      #17                 // Field com/premium/game/model/actor/instance/L2PcInstance._inWorld:Z
+      84: aload_1
+      85: invokevirtual #18                 // Method com/premium/game/model/actor/instance/L2PcInstance.getInventory:()Lcom/premium/game/model/itemcontainer/PcInventory;
+      88: aload_0
+      89: getfield      #3                  // Field _objectId:I
+      92: invokevirtual #19                 // Method com/premium/game/model/itemcontainer/PcInventory.getItemByObjectId:(I)Lcom/premium/game/model/actor/instance/L2ItemInstance;
+      95: astore_2
+      96: aload_2
+      97: ifnonnull     101
+     100: return
+     101: aload_1
+     102: getfield      #20                 // Field com/premium/game/model/actor/instance/L2PcInstance._lastUseItem:I
+     105: aload_2
+     106: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+     109: if_icmpne     130
+     112: aload_1
+     113: getstatic     #22                 // Field com/premium/game/util/FloodProtector$Protected.USEITEM:Lcom/premium/game/util/FloodProtector$Protected;
+     116: invokestatic  #23                 // Method com/premium/game/util/FloodProtector.tryPerformAction:(Lcom/premium/game/model/actor/instance/L2PcInstance;Lcom/premium/game/util/FloodProtector$Protected;)Z
+     119: ifne          130
+     122: aload_1
+     123: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+     126: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     129: return
+     130: aload_1
+     131: getfield      #24                 // Field com/premium/game/model/actor/instance/L2PcInstance._event:Lcom/premium/game/model/entity/events/GameEvent;
+     134: ifnull        160
+     137: aload_1
+     138: getfield      #24                 // Field com/premium/game/model/actor/instance/L2PcInstance._event:Lcom/premium/game/model/entity/events/GameEvent;
+     141: invokevirtual #25                 // Method com/premium/game/model/entity/events/GameEvent.isRunning:()Z
+     144: ifeq          160
+     147: aload_1
+     148: getfield      #24                 // Field com/premium/game/model/actor/instance/L2PcInstance._event:Lcom/premium/game/model/entity/events/GameEvent;
+     151: aload_1
+     152: aload_2
+     153: invokevirtual #26                 // Method com/premium/game/model/entity/events/GameEvent.canUseItem:(Lcom/premium/game/model/actor/L2Character;Lcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     156: ifne          160
+     159: return
+     160: aload_1
+     161: aload_2
+     162: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+     165: putfield      #20                 // Field com/premium/game/model/actor/instance/L2PcInstance._lastUseItem:I
+     168: aload_2
+     169: invokevirtual #27                 // Method com/premium/game/model/actor/instance/L2ItemInstance.isWear:()Z
+     172: ifeq          176
+     175: return
+     176: aload_2
+     177: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     180: invokevirtual #29                 // Method com/premium/game/templates/item/L2Item.getType2:()I
+     183: iconst_3
+     184: if_icmpne     195
+     187: aload_1
+     188: getstatic     #31                 // Field com/premium/game/network/SystemMessageId.CANNOT_USE_QUEST_ITEMS:Lcom/premium/game/network/SystemMessageId;
+     191: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+     194: return
+     195: aload_2
+     196: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+     199: istore_3
+     200: getstatic     #32                 // Field com/premium/Config.ALT_GAME_KARMA_PLAYER_CAN_TELEPORT:Z
+     203: ifne          319
+     206: aload_1
+     207: invokevirtual #33                 // Method com/premium/game/model/actor/instance/L2PcInstance.getKarma:()I
+     210: ifle          319
+     213: iload_3
+     214: sipush        736
+     217: if_icmpeq     318
+     220: iload_3
+     221: sipush        1538
+     224: if_icmpeq     318
+     227: iload_3
+     228: sipush        1829
+     231: if_icmpeq     318
+     234: iload_3
+     235: sipush        1830
+     238: if_icmpeq     318
+     241: iload_3
+     242: sipush        3958
+     245: if_icmpeq     318
+     248: iload_3
+     249: sipush        5858
+     252: if_icmpeq     318
+     255: iload_3
+     256: sipush        5859
+     259: if_icmpeq     318
+     262: iload_3
+     263: sipush        6663
+     266: if_icmpeq     318
+     269: iload_3
+     270: sipush        6664
+     273: if_icmpeq     318
+     276: iload_3
+     277: sipush        7117
+     280: if_icmplt     290
+     283: iload_3
+     284: sipush        7135
+     287: if_icmple     318
+     290: iload_3
+     291: sipush        7554
+     294: if_icmplt     304
+     297: iload_3
+     298: sipush        7559
+     301: if_icmple     318
+     304: iload_3
+     305: sipush        7618
+     308: if_icmpeq     318
+     311: iload_3
+     312: sipush        7619
+     315: if_icmpne     319
+     318: return
+     319: iload_3
+     320: bipush        57
+     322: if_icmpne     326
+     325: return
+     326: aload_1
+     327: invokevirtual #34                 // Method com/premium/game/model/actor/instance/L2PcInstance.isFishing:()Z
+     330: ifeq          355
+     333: iload_3
+     334: sipush        6535
+     337: if_icmplt     347
+     340: iload_3
+     341: sipush        6540
+     344: if_icmple     355
+     347: aload_1
+     348: getstatic     #35                 // Field com/premium/game/network/SystemMessageId.CANNOT_DO_WHILE_FISHING_3:Lcom/premium/game/network/SystemMessageId;
+     351: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+     354: return
+     355: aload_1
+     356: invokevirtual #36                 // Method com/premium/game/model/actor/instance/L2PcInstance.isDead:()Z
+     359: ifeq          377
+     362: aload_1
+     363: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+     366: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     369: iload_3
+     370: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+     373: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     376: return
+     377: getstatic     #40                 // Field com/premium/Config.ARENA_DUEL_ALLOW_S:Z
+     380: ifne          420
+     383: aload_2
+     384: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     387: invokevirtual #41                 // Method com/premium/game/templates/item/L2Item.getItemGrade:()I
+     390: iconst_5
+     391: if_icmpne     420
+     394: aload_1
+     395: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2PcInstance.isInArenaEvent:()Z
+     398: ifne          411
+     401: invokestatic  #43                 // Method com/premium/game/model/entity/events/arenaduel/ArenaDuel.getInstance:()Lcom/premium/game/model/entity/events/arenaduel/ArenaDuel;
+     404: aload_1
+     405: invokevirtual #44                 // Method com/premium/game/model/entity/events/arenaduel/ArenaDuel.isRegistered:(Lcom/premium/game/model/actor/instance/L2PcInstance;)Z
+     408: ifeq          420
+     411: aload_1
+     412: getstatic     #45                 // Field com/premium/Message$MessageId.MSG_TOURNAMENT_GRADE_S_RESTRICTED:Lcom/premium/Message$MessageId;
+     415: invokestatic  #46                 // Method com/premium/Message.getMessage:(Lcom/premium/game/model/actor/instance/L2PcInstance;Lcom/premium/Message$MessageId;)Ljava/lang/String;
+     418: pop
+     419: return
+     420: aload_1
+     421: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2PcInstance.isInArenaEvent:()Z
+     424: ifne          434
+     427: aload_1
+     428: invokevirtual #47                 // Method com/premium/game/model/actor/instance/L2PcInstance.isArenaProtection:()Z
+     431: ifeq          468
+     434: getstatic     #48                 // Field com/premium/Config.ARENA_DUEL_LIST_ITEMS_RESTRICT:Ljava/util/List;
+     437: aload_2
+     438: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+     441: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     444: invokeinterface #50,  2           // InterfaceMethod java/util/List.contains:(Ljava/lang/Object;)Z
+     449: ifeq          468
+     452: aload_1
+     453: getstatic     #51                 // Field com/premium/Message$MessageId.MSG_TOURNAMENT_ITEM_RESTRICTED:Lcom/premium/Message$MessageId;
+     456: invokestatic  #46                 // Method com/premium/Message.getMessage:(Lcom/premium/game/model/actor/instance/L2PcInstance;Lcom/premium/Message$MessageId;)Ljava/lang/String;
+     459: pop
+     460: aload_1
+     461: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+     464: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     467: return
+     468: getstatic     #52                 // Field com/premium/Config.CHECK_ENCHANT_LEVEL_EQUIP:Z
+     471: ifeq          660
+     474: aload_1
+     475: invokevirtual #53                 // Method com/premium/game/model/actor/instance/L2PcInstance.isGM:()Z
+     478: ifne          660
+     481: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     484: ifle          540
+     487: aload_2
+     488: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     491: invokevirtual #29                 // Method com/premium/game/templates/item/L2Item.getType2:()I
+     494: ifne          540
+     497: aload_2
+     498: invokevirtual #55                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getEnchantLevel:()I
+     501: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     504: if_icmple     540
+     507: aload_1
+     508: new           #56                 // class java/lang/StringBuilder
+     511: dup
+     512: invokespecial #57                 // Method java/lang/StringBuilder."<init>":()V
+     515: ldc           #58                 // String Player
+     517: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     520: aload_1
+     521: invokevirtual #60                 // Method com/premium/game/model/actor/instance/L2PcInstance.getName:()Ljava/lang/String;
+     524: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     527: ldc           #61                 // String  tried to put overchanted item!
+     529: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     532: invokevirtual #62                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+     535: iconst_2
+     536: invokestatic  #64                 // Method com/premium/game/util/Util.handleIllegalPlayerAction:(Lcom/premium/game/model/actor/instance/L2PcInstance;Ljava/lang/String;I)V
+     539: return
+     540: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     543: ifle          600
+     546: aload_2
+     547: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     550: invokevirtual #29                 // Method com/premium/game/templates/item/L2Item.getType2:()I
+     553: iconst_1
+     554: if_icmpne     600
+     557: aload_2
+     558: invokevirtual #55                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getEnchantLevel:()I
+     561: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     564: if_icmple     600
+     567: aload_1
+     568: new           #56                 // class java/lang/StringBuilder
+     571: dup
+     572: invokespecial #57                 // Method java/lang/StringBuilder."<init>":()V
+     575: ldc           #58                 // String Player
+     577: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     580: aload_1
+     581: invokevirtual #60                 // Method com/premium/game/model/actor/instance/L2PcInstance.getName:()Ljava/lang/String;
+     584: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     587: ldc           #61                 // String  tried to put overchanted item!
+     589: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     592: invokevirtual #62                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+     595: iconst_2
+     596: invokestatic  #64                 // Method com/premium/game/util/Util.handleIllegalPlayerAction:(Lcom/premium/game/model/actor/instance/L2PcInstance;Ljava/lang/String;I)V
+     599: return
+     600: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     603: ifle          660
+     606: aload_2
+     607: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     610: invokevirtual #29                 // Method com/premium/game/templates/item/L2Item.getType2:()I
+     613: iconst_2
+     614: if_icmpne     660
+     617: aload_2
+     618: invokevirtual #55                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getEnchantLevel:()I
+     621: getstatic     #54                 // Field com/premium/Config.ENCHANT_OVER_CHANT_CHECK:I
+     624: if_icmple     660
+     627: aload_1
+     628: new           #56                 // class java/lang/StringBuilder
+     631: dup
+     632: invokespecial #57                 // Method java/lang/StringBuilder."<init>":()V
+     635: ldc           #58                 // String Player
+     637: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     640: aload_1
+     641: invokevirtual #60                 // Method com/premium/game/model/actor/instance/L2PcInstance.getName:()Ljava/lang/String;
+     644: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     647: ldc           #61                 // String  tried to put overchanted item!
+     649: invokevirtual #59                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     652: invokevirtual #62                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+     655: iconst_2
+     656: invokestatic  #64                 // Method com/premium/game/util/Util.handleIllegalPlayerAction:(Lcom/premium/game/model/actor/instance/L2PcInstance;Ljava/lang/String;I)V
+     659: return
+     660: aload_2
+     661: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     664: instanceof    #65                 // class com/premium/game/templates/item/L2Armor
+     667: ifeq          683
+     670: aload_2
+     671: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     674: invokevirtual #66                 // Method com/premium/game/templates/item/L2Item.getItemType:()Lcom/premium/game/templates/item/AbstractL2ItemType;
+     677: getstatic     #67                 // Field com/premium/game/templates/item/L2ArmorType.PET:Lcom/premium/game/templates/item/L2ArmorType;
+     680: if_acmpeq     706
+     683: aload_2
+     684: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     687: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+     690: ifeq          714
+     693: aload_2
+     694: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     697: invokevirtual #66                 // Method com/premium/game/templates/item/L2Item.getItemType:()Lcom/premium/game/templates/item/AbstractL2ItemType;
+     700: getstatic     #69                 // Field com/premium/game/templates/item/L2WeaponType.PET:Lcom/premium/game/templates/item/L2WeaponType;
+     703: if_acmpne     714
+     706: aload_1
+     707: getstatic     #70                 // Field com/premium/game/network/SystemMessageId.CANNOT_EQUIP_PET_ITEM:Lcom/premium/game/network/SystemMessageId;
+     710: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+     713: return
+     714: aload_2
+     715: invokevirtual #71                 // Method com/premium/game/model/actor/instance/L2ItemInstance.isEquipped:()Z
+     718: ifne          735
+     721: aload_2
+     722: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     725: aload_1
+     726: aload_1
+     727: iconst_1
+     728: invokevirtual #72                 // Method com/premium/game/templates/item/L2Item.checkCondition:(Lcom/premium/game/model/actor/L2Character;Lcom/premium/game/model/L2Object;Z)Z
+     731: ifne          735
+     734: return
+     735: getstatic     #73                 // Field com/premium/Config.ALLOW_HEAVY_USE_LIGHT:Z
+     738: ifne          787
+     741: getstatic     #74                 // Field com/premium/Config.NOTALLOWEDUSELIGHT:Ljava/util/List;
+     744: aload_1
+     745: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+     748: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+     751: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     754: invokeinterface #50,  2           // InterfaceMethod java/util/List.contains:(Ljava/lang/Object;)Z
+     759: ifeq          787
+     762: aload_2
+     763: invokevirtual #77                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemType:()Lcom/premium/game/templates/item/AbstractL2ItemType;
+     766: getstatic     #78                 // Field com/premium/game/templates/item/L2ArmorType.LIGHT:Lcom/premium/game/templates/item/L2ArmorType;
+     769: if_acmpne     787
+     772: aload_1
+     773: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+     776: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     779: iload_3
+     780: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+     783: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     786: return
+     787: getstatic     #79                 // Field com/premium/Config.ALLOW_LIGHT_USE_HEAVY:Z
+     790: ifne          839
+     793: getstatic     #80                 // Field com/premium/Config.NOTALLOWEDUSEHEAVY:Ljava/util/List;
+     796: aload_1
+     797: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+     800: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+     803: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     806: invokeinterface #50,  2           // InterfaceMethod java/util/List.contains:(Ljava/lang/Object;)Z
+     811: ifeq          839
+     814: aload_2
+     815: invokevirtual #77                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemType:()Lcom/premium/game/templates/item/AbstractL2ItemType;
+     818: getstatic     #81                 // Field com/premium/game/templates/item/L2ArmorType.HEAVY:Lcom/premium/game/templates/item/L2ArmorType;
+     821: if_acmpne     839
+     824: aload_1
+     825: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+     828: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     831: iload_3
+     832: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+     835: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     838: return
+     839: getstatic     #82                 // Field com/premium/Config.ALT_DISABLE_BOW_CLASSES:Z
+     842: ifeq          912
+     845: aload_2
+     846: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     849: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+     852: ifeq          912
+     855: aload_2
+     856: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     859: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+     862: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+     865: getstatic     #84                 // Field com/premium/game/templates/item/L2WeaponType.BOW:Lcom/premium/game/templates/item/L2WeaponType;
+     868: if_acmpne     912
+     871: getstatic     #85                 // Field com/premium/Config.DISABLE_BOW_CLASSES:Ljava/util/ArrayList;
+     874: aload_1
+     875: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+     878: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+     881: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     884: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+     887: ifeq          912
+     890: aload_1
+     891: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+     894: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     897: iload_3
+     898: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+     901: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     904: aload_1
+     905: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+     908: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     911: return
+     912: getstatic     #87                 // Field com/premium/Config.ALT_DISABLE_DAGGER_CLASSES:Z
+     915: ifeq          985
+     918: aload_2
+     919: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     922: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+     925: ifeq          985
+     928: aload_2
+     929: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     932: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+     935: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+     938: getstatic     #88                 // Field com/premium/game/templates/item/L2WeaponType.DAGGER:Lcom/premium/game/templates/item/L2WeaponType;
+     941: if_acmpne     985
+     944: getstatic     #89                 // Field com/premium/Config.DISABLE_DAGGER_CLASSES:Ljava/util/ArrayList;
+     947: aload_1
+     948: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+     951: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+     954: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     957: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+     960: ifeq          985
+     963: aload_1
+     964: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+     967: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     970: iload_3
+     971: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+     974: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     977: aload_1
+     978: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+     981: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     984: return
+     985: getstatic     #90                 // Field com/premium/Config.ALT_DISABLE_SWORD_CLASSES:Z
+     988: ifeq          1058
+     991: aload_2
+     992: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+     995: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+     998: ifeq          1058
+    1001: aload_2
+    1002: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1005: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+    1008: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1011: getstatic     #91                 // Field com/premium/game/templates/item/L2WeaponType.SWORD:Lcom/premium/game/templates/item/L2WeaponType;
+    1014: if_acmpne     1058
+    1017: getstatic     #92                 // Field com/premium/Config.DISABLE_SWORD_CLASSES:Ljava/util/ArrayList;
+    1020: aload_1
+    1021: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+    1024: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+    1027: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    1030: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+    1033: ifeq          1058
+    1036: aload_1
+    1037: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1040: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1043: iload_3
+    1044: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1047: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1050: aload_1
+    1051: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1054: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1057: return
+    1058: getstatic     #93                 // Field com/premium/Config.ALT_DISABLE_BLUNT_CLASSES:Z
+    1061: ifeq          1131
+    1064: aload_2
+    1065: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1068: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+    1071: ifeq          1131
+    1074: aload_2
+    1075: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1078: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+    1081: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1084: getstatic     #94                 // Field com/premium/game/templates/item/L2WeaponType.BLUNT:Lcom/premium/game/templates/item/L2WeaponType;
+    1087: if_acmpne     1131
+    1090: getstatic     #95                 // Field com/premium/Config.DISABLE_BLUNT_CLASSES:Ljava/util/ArrayList;
+    1093: aload_1
+    1094: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+    1097: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+    1100: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    1103: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+    1106: ifeq          1131
+    1109: aload_1
+    1110: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1113: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1116: iload_3
+    1117: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1120: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1123: aload_1
+    1124: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1127: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1130: return
+    1131: getstatic     #96                 // Field com/premium/Config.ALT_DISABLE_DUAL_CLASSES:Z
+    1134: ifeq          1204
+    1137: aload_2
+    1138: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1141: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+    1144: ifeq          1204
+    1147: aload_2
+    1148: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1151: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+    1154: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1157: getstatic     #97                 // Field com/premium/game/templates/item/L2WeaponType.DUAL:Lcom/premium/game/templates/item/L2WeaponType;
+    1160: if_acmpne     1204
+    1163: getstatic     #98                 // Field com/premium/Config.DISABLE_DUAL_CLASSES:Ljava/util/ArrayList;
+    1166: aload_1
+    1167: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+    1170: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+    1173: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    1176: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+    1179: ifeq          1204
+    1182: aload_1
+    1183: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1186: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1189: iload_3
+    1190: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1193: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1196: aload_1
+    1197: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1200: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1203: return
+    1204: getstatic     #99                 // Field com/premium/Config.ALT_DISABLE_POLE_CLASSES:Z
+    1207: ifeq          1277
+    1210: aload_2
+    1211: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1214: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+    1217: ifeq          1277
+    1220: aload_2
+    1221: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1224: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+    1227: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1230: getstatic     #100                // Field com/premium/game/templates/item/L2WeaponType.POLE:Lcom/premium/game/templates/item/L2WeaponType;
+    1233: if_acmpne     1277
+    1236: getstatic     #101                // Field com/premium/Config.DISABLE_POLE_CLASSES:Ljava/util/ArrayList;
+    1239: aload_1
+    1240: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+    1243: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+    1246: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    1249: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+    1252: ifeq          1277
+    1255: aload_1
+    1256: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1259: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1262: iload_3
+    1263: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1266: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1269: aload_1
+    1270: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1273: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1276: return
+    1277: getstatic     #102                // Field com/premium/Config.ALT_DISABLE_BIGSWORD_CLASSES:Z
+    1280: ifeq          1350
+    1283: aload_2
+    1284: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1287: instanceof    #68                 // class com/premium/game/templates/item/L2Weapon
+    1290: ifeq          1350
+    1293: aload_2
+    1294: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1297: checkcast     #68                 // class com/premium/game/templates/item/L2Weapon
+    1300: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1303: getstatic     #103                // Field com/premium/game/templates/item/L2WeaponType.BIGSWORD:Lcom/premium/game/templates/item/L2WeaponType;
+    1306: if_acmpne     1350
+    1309: getstatic     #104                // Field com/premium/Config.DISABLE_BIGSWORD_CLASSES:Ljava/util/ArrayList;
+    1312: aload_1
+    1313: invokevirtual #75                 // Method com/premium/game/model/actor/instance/L2PcInstance.getClassId:()Lcom/premium/game/model/base/ClassId;
+    1316: invokevirtual #76                 // Method com/premium/game/model/base/ClassId.getId:()I
+    1319: invokestatic  #49                 // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+    1322: invokevirtual #86                 // Method java/util/ArrayList.contains:(Ljava/lang/Object;)Z
+    1325: ifeq          1350
+    1328: aload_1
+    1329: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1332: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1335: iload_3
+    1336: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1339: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1342: aload_1
+    1343: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1346: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1349: return
+    1350: aload_1
+    1351: invokevirtual #105                // Method com/premium/game/model/actor/instance/L2PcInstance.isInOlympiadMode:()Z
+    1354: ifeq          1386
+    1357: aload_2
+    1358: invokevirtual #106                // Method com/premium/game/model/actor/instance/L2ItemInstance.isHeroItem:()Z
+    1361: ifne          1371
+    1364: aload_2
+    1365: invokevirtual #107                // Method com/premium/game/model/actor/instance/L2ItemInstance.isOlyRestrictedItem:()Z
+    1368: ifeq          1386
+    1371: aload_1
+    1372: getstatic     #108                // Field com/premium/game/network/SystemMessageId.THIS_ITEM_CANT_BE_EQUIPPED_FOR_THE_OLYMPIAD_EVENT:Lcom/premium/game/network/SystemMessageId;
+    1375: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1378: aload_1
+    1379: getstatic     #11                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    1382: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1385: return
+    1386: aload_2
+    1387: invokevirtual #109                // Method com/premium/game/model/actor/instance/L2ItemInstance.isEquipable:()Z
+    1390: ifeq          1749
+    1393: aload_1
+    1394: invokevirtual #110                // Method com/premium/game/model/actor/instance/L2PcInstance.isStunned:()Z
+    1397: ifne          1421
+    1400: aload_1
+    1401: invokevirtual #111                // Method com/premium/game/model/actor/instance/L2PcInstance.isSleeping:()Z
+    1404: ifne          1421
+    1407: aload_1
+    1408: invokevirtual #112                // Method com/premium/game/model/actor/instance/L2PcInstance.isParalyzed:()Z
+    1411: ifne          1421
+    1414: aload_1
+    1415: invokevirtual #113                // Method com/premium/game/model/actor/instance/L2PcInstance.isAlikeDead:()Z
+    1418: ifeq          1436
+    1421: aload_1
+    1422: getstatic     #37                 // Field com/premium/game/network/SystemMessageId.S1_CANNOT_BE_USED:Lcom/premium/game/network/SystemMessageId;
+    1425: invokestatic  #38                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1428: iload_3
+    1429: invokevirtual #39                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(I)Lcom/premium/game/network/serverpackets/SystemMessage;
+    1432: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1435: return
+    1436: aload_1
+    1437: invokevirtual #53                 // Method com/premium/game/model/actor/instance/L2PcInstance.isGM:()Z
+    1440: ifne          1458
+    1443: aload_1
+    1444: invokevirtual #114                // Method com/premium/game/model/actor/instance/L2PcInstance.isHero:()Z
+    1447: ifne          1458
+    1450: aload_2
+    1451: invokevirtual #106                // Method com/premium/game/model/actor/instance/L2ItemInstance.isHeroItem:()Z
+    1454: ifeq          1458
+    1457: return
+    1458: aload_2
+    1459: invokevirtual #28                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItem:()Lcom/premium/game/templates/item/L2Item;
+    1462: invokevirtual #115                // Method com/premium/game/templates/item/L2Item.getBodyPart:()I
+    1465: lookupswitch  { // 10
+
+                    64: 1614
+
+                   128: 1556
+
+                   256: 1556
+
+                   512: 1614
+
+                  1024: 1614
+
+                  2048: 1614
+
+                  4096: 1614
+
+                  8192: 1614
+
+                 16384: 1556
+
+                 32768: 1614
+               default: 1614
+          }
+    1556: aload_1
+    1557: invokevirtual #116                // Method com/premium/game/model/actor/instance/L2PcInstance.getActiveWeaponItem:()Lcom/premium/game/templates/item/L2Weapon;
+    1560: ifnull        1584
+    1563: aload_1
+    1564: invokevirtual #116                // Method com/premium/game/model/actor/instance/L2PcInstance.getActiveWeaponItem:()Lcom/premium/game/templates/item/L2Weapon;
+    1567: invokevirtual #117                // Method com/premium/game/templates/item/L2Weapon.getItemId:()I
+    1570: getstatic     #118                // Field com/premium/Config.FORTSIEGE_COMBAT_FLAG_ID:I
+    1573: if_icmpne     1584
+    1576: aload_1
+    1577: getstatic     #119                // Field com/premium/game/network/SystemMessageId.NO_CONDITION_TO_EQUIP:Lcom/premium/game/network/SystemMessageId;
+    1580: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1583: return
+    1584: aload_1
+    1585: invokevirtual #120                // Method com/premium/game/model/actor/instance/L2PcInstance.isMounted:()Z
+    1588: ifne          1598
+    1591: aload_1
+    1592: invokevirtual #121                // Method com/premium/game/model/actor/instance/L2PcInstance.isDisarmed:()Z
+    1595: ifeq          1606
+    1598: aload_1
+    1599: getstatic     #119                // Field com/premium/game/network/SystemMessageId.NO_CONDITION_TO_EQUIP:Lcom/premium/game/network/SystemMessageId;
+    1602: invokevirtual #10                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1605: return
+    1606: aload_1
+    1607: invokevirtual #122                // Method com/premium/game/model/actor/instance/L2PcInstance.isCursedWeaponEquipped:()Z
+    1610: ifeq          1614
+    1613: return
+    1614: aload_1
+    1615: invokevirtual #122                // Method com/premium/game/model/actor/instance/L2PcInstance.isCursedWeaponEquipped:()Z
+    1618: ifeq          1629
+    1621: iload_3
+    1622: sipush        6408
+    1625: if_icmpne     1629
+    1628: return
+    1629: aload_1
+    1630: invokevirtual #123                // Method com/premium/game/model/actor/instance/L2PcInstance.isCastingNow:()Z
+    1633: ifne          1643
+    1636: aload_1
+    1637: invokevirtual #124                // Method com/premium/game/model/actor/instance/L2PcInstance.isCastingSimultaneouslyNow:()Z
+    1640: ifeq          1680
+    1643: new           #125                // class com/premium/game/ai/NextAction
+    1646: dup
+    1647: getstatic     #126                // Field com/premium/game/ai/CtrlEvent.EVT_FINISH_CASTING:Lcom/premium/game/ai/CtrlEvent;
+    1650: getstatic     #127                // Field com/premium/game/ai/CtrlIntention.CAST:Lcom/premium/game/ai/CtrlIntention;
+    1653: new           #128                // class com/premium/game/network/clientpackets/UseItem$1
+    1656: dup
+    1657: aload_0
+    1658: aload_1
+    1659: aload_2
+    1660: invokespecial #129                // Method com/premium/game/network/clientpackets/UseItem$1."<init>":(Lcom/premium/game/network/clientpackets/UseItem;Lcom/premium/game/model/actor/instance/L2PcInstance;Lcom/premium/game/model/actor/instance/L2ItemInstance;)V
+    1663: invokespecial #130                // Method com/premium/game/ai/NextAction."<init>":(Lcom/premium/game/ai/CtrlEvent;Lcom/premium/game/ai/CtrlIntention;Lcom/premium/game/ai/NextAction$NextActionCallback;)V
+    1666: astore        4
+    1668: aload_1
+    1669: invokevirtual #131                // Method com/premium/game/model/actor/instance/L2PcInstance.getAI:()Lcom/premium/game/ai/L2CharacterAI;
+    1672: aload         4
+    1674: invokevirtual #132                // Method com/premium/game/ai/L2CharacterAI.setNextAction:(Lcom/premium/game/ai/NextAction;)V
+    1677: goto          2070
+    1680: invokestatic  #133                // Method com/premium/game/manager/FortSiegeManager.getInstance:()Lcom/premium/game/manager/FortSiegeManager;
+    1683: aload_2
+    1684: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+    1687: invokevirtual #134                // Method com/premium/game/manager/FortSiegeManager.isCombat:(I)Z
+    1690: ifeq          1694
+    1693: return
+    1694: aload_1
+    1695: invokevirtual #135                // Method com/premium/game/model/actor/instance/L2PcInstance.isAttackingNow:()Z
+    1698: ifeq          1740
+    1701: getstatic     #136                // Field com/premium/Config.BLOCK_CHANGE_WEAPON_ON_ATTACK:Z
+    1704: ifeq          1740
+    1707: invokestatic  #137                // Method com/premium/game/network/ThreadPoolManager.getInstance:()Lcom/premium/game/network/ThreadPoolManager;
+    1710: new           #138                // class com/premium/game/network/clientpackets/UseItem$WeaponEquipTask
+    1713: dup
+    1714: aload_0
+    1715: aload_2
+    1716: aload_1
+    1717: invokespecial #139                // Method com/premium/game/network/clientpackets/UseItem$WeaponEquipTask."<init>":(Lcom/premium/game/network/clientpackets/UseItem;Lcom/premium/game/model/actor/instance/L2ItemInstance;Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1720: aload_1
+    1721: invokevirtual #140                // Method com/premium/game/model/actor/instance/L2PcInstance.getAttackEndTime:()J
+    1724: invokestatic  #141                // Method com/premium/game/GameTimeController.getGameTicks:()I
+    1727: i2l
+    1728: lsub
+    1729: ldc2_w        #143                // long 100l
+    1732: lmul
+    1733: invokevirtual #145                // Method com/premium/game/network/ThreadPoolManager.scheduleGeneral:(Ljava/lang/Runnable;J)Ljava/util/concurrent/ScheduledFuture;
+    1736: pop
+    1737: goto          2070
+    1740: aload_1
+    1741: aload_2
+    1742: iconst_1
+    1743: invokevirtual #146                // Method com/premium/game/model/actor/instance/L2PcInstance.useEquippableItem:(Lcom/premium/game/model/actor/instance/L2ItemInstance;Z)V
+    1746: goto          2070
+    1749: aload_1
+    1750: invokevirtual #116                // Method com/premium/game/model/actor/instance/L2PcInstance.getActiveWeaponItem:()Lcom/premium/game/templates/item/L2Weapon;
+    1753: astore        4
+    1755: aload_2
+    1756: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+    1759: istore        5
+    1761: iload         5
+    1763: sipush        4393
+    1766: if_icmpne     1786
+    1769: aload_1
+    1770: new           #147                // class com/premium/game/network/serverpackets/ShowCalculator
+    1773: dup
+    1774: sipush        4393
+    1777: invokespecial #148                // Method com/premium/game/network/serverpackets/ShowCalculator."<init>":(I)V
+    1780: invokevirtual #12                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1783: goto          2070
+    1786: aload         4
+    1788: ifnull        1919
+    1791: aload         4
+    1793: invokevirtual #83                 // Method com/premium/game/templates/item/L2Weapon.getItemType:()Lcom/premium/game/templates/item/L2WeaponType;
+    1796: getstatic     #149                // Field com/premium/game/templates/item/L2WeaponType.ROD:Lcom/premium/game/templates/item/L2WeaponType;
+    1799: if_acmpne     1919
+    1802: iload         5
+    1804: sipush        6519
+    1807: if_icmplt     1818
+    1810: iload         5
+    1812: sipush        6527
+    1815: if_icmple     1890
+    1818: iload         5
+    1820: sipush        7610
+    1823: if_icmplt     1834
+    1826: iload         5
+    1828: sipush        7613
+    1831: if_icmple     1890
+    1834: iload         5
+    1836: sipush        7807
+    1839: if_icmplt     1850
+    1842: iload         5
+    1844: sipush        7809
+    1847: if_icmple     1890
+    1850: iload         5
+    1852: sipush        8484
+    1855: if_icmplt     1866
+    1858: iload         5
+    1860: sipush        8486
+    1863: if_icmple     1890
+    1866: iload         5
+    1868: sipush        8505
+    1871: if_icmplt     1882
+    1874: iload         5
+    1876: sipush        8513
+    1879: if_icmple     1890
+    1882: iload         5
+    1884: sipush        8548
+    1887: if_icmpne     1919
+    1890: aload_1
+    1891: invokevirtual #18                 // Method com/premium/game/model/actor/instance/L2PcInstance.getInventory:()Lcom/premium/game/model/itemcontainer/PcInventory;
+    1894: bipush        10
+    1896: aload_2
+    1897: invokevirtual #151                // Method com/premium/game/model/itemcontainer/PcInventory.setPaperdollItem:(ILcom/premium/game/model/actor/instance/L2ItemInstance;)Lcom/premium/game/model/actor/instance/L2ItemInstance;
+    1900: pop
+    1901: aload_1
+    1902: invokevirtual #152                // Method com/premium/game/model/actor/instance/L2PcInstance.broadcastUserInfo:()V
+    1905: aload_0
+    1906: new           #153                // class com/premium/game/network/serverpackets/ItemList
+    1909: dup
+    1910: aload_1
+    1911: iconst_0
+    1912: invokespecial #154                // Method com/premium/game/network/serverpackets/ItemList."<init>":(Lcom/premium/game/model/actor/instance/L2PcInstance;Z)V
+    1915: invokevirtual #155                // Method sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1918: return
+    1919: invokestatic  #156                // Method com/premium/game/handler/ItemHandler.getInstance:()Lcom/premium/game/handler/ItemHandler;
+    1922: aload_2
+    1923: invokevirtual #21                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+    1926: invokevirtual #157                // Method com/premium/game/handler/ItemHandler.getItemHandler:(I)Lcom/premium/game/handler/IItemHandler;
+    1929: astore        6
+    1931: aload         6
+    1933: ifnonnull     2061
+    1936: aload_2
+    1937: invokevirtual #158                // Method com/premium/game/model/actor/instance/L2ItemInstance.getEtcItem:()Lcom/premium/game/templates/item/L2EtcItem;
+    1940: ifnull        2070
+    1943: aload_2
+    1944: invokevirtual #158                // Method com/premium/game/model/actor/instance/L2ItemInstance.getEtcItem:()Lcom/premium/game/templates/item/L2EtcItem;
+    1947: invokevirtual #159                // Method com/premium/game/templates/item/L2EtcItem.getSkills:()[Ljava/lang/String;
+    1950: astore        7
+    1952: aload         7
+    1954: arraylength
+    1955: istore        8
+    1957: iconst_0
+    1958: istore        9
+    1960: iload         9
+    1962: iload         8
+    1964: if_icmpge     2058
+    1967: aload         7
+    1969: iload         9
+    1971: aaload
+    1972: astore        10
+    1974: aload         10
+    1976: ldc           #160                // String -
+    1978: invokevirtual #161                // Method java/lang/String.split:(Ljava/lang/String;)[Ljava/lang/String;
+    1981: astore        11
+    1983: invokestatic  #162                // Method com/premium/game/datatables/xml/SkillTable.getInstance:()Lcom/premium/game/datatables/xml/SkillTable;
+    1986: aload         11
+    1988: iconst_0
+    1989: aaload
+    1990: invokestatic  #163                // Method java/lang/Integer.parseInt:(Ljava/lang/String;)I
+    1993: aload         11
+    1995: iconst_1
+    1996: aaload
+    1997: invokestatic  #163                // Method java/lang/Integer.parseInt:(Ljava/lang/String;)I
+    2000: invokevirtual #164                // Method com/premium/game/datatables/xml/SkillTable.getInfo:(II)Lcom/premium/game/model/L2Skill;
+    2003: astore        12
+    2005: aload         12
+    2007: ifnull        2052
+    2010: aload         12
+    2012: aload_1
+    2013: aload_1
+    2014: invokevirtual #165                // Method com/premium/game/model/L2Skill.checkCondition:(Lcom/premium/game/model/actor/L2Character;Lcom/premium/game/model/L2Object;)Z
+    2017: ifeq          2031
+    2020: aload_1
+    2021: aload         12
+    2023: iconst_1
+    2024: iconst_1
+    2025: invokevirtual #166                // Method com/premium/game/model/actor/instance/L2PcInstance.useMagic:(Lcom/premium/game/model/L2Skill;ZZ)V
+    2028: goto          2052
+    2031: aload         12
+    2033: aload_1
+    2034: aload_1
+    2035: invokevirtual #167                // Method com/premium/game/model/actor/instance/L2PcInstance.getTarget:()Lcom/premium/game/model/L2Object;
+    2038: invokevirtual #165                // Method com/premium/game/model/L2Skill.checkCondition:(Lcom/premium/game/model/actor/L2Character;Lcom/premium/game/model/L2Object;)Z
+    2041: ifeq          2052
+    2044: aload_1
+    2045: aload         12
+    2047: iconst_1
+    2048: iconst_1
+    2049: invokevirtual #166                // Method com/premium/game/model/actor/instance/L2PcInstance.useMagic:(Lcom/premium/game/model/L2Skill;ZZ)V
+    2052: iinc          9, 1
+    2055: goto          1960
+    2058: goto          2070
+    2061: aload         6
+    2063: aload_1
+    2064: aload_2
+    2065: invokeinterface #168,  3          // InterfaceMethod com/premium/game/handler/IItemHandler.useItem:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;)V
+    2070: return
+}

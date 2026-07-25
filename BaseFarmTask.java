@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,12 +24,11 @@ import com.premium.game.model.world.Location;
 import com.premium.game.network.ThreadPoolManager;
 import com.premium.game.network.serverpackets.L2GameServerPacket;
 import com.premium.game.network.serverpackets.MyTargetSelected;
+import com.premium.game.network.serverpackets.TargetUnselected;
 import com.premium.game.util.Util;
 import com.premium.util.AbstractHardReference;
 import com.premium.util.HardReference;
 import com.premium.util.HardReferences;
-
-import javafx.util.Pair;
 
 public abstract class BaseFarmTask implements Runnable {
 
@@ -37,10 +37,6 @@ public abstract class BaseFarmTask implements Runnable {
 	protected static final int RUN_AWAY_STATIC_DISTANCE = 500;
 
 	protected static final int RUN_AWAY_RANDOM_DISTANCE = 100;
-
-	protected static final int MAX_CONSECUTIVE_FAILURES = 3;
-
-	private int consecutiveFailures = 0;
 
 	private final AutoFarmContext Nw;
 
@@ -109,120 +105,126 @@ public abstract class BaseFarmTask implements Runnable {
 		return false;
 	}
 
-	protected boolean selectRandomTarget() {
+    protected boolean selectRandomTarget() {
 
-		final L2PcInstance player = this.getAutoFarmContext().getP().getActingPlayer();
+        final L2PcInstance player = this.getAutoFarmContext().getP().getActingPlayer();
 
-		if (player == null || player.isCastingNow()) {
-			return false;
-		}
-		final L2MonsterInstance committedTarget = this.getCommittedTarget();
-		if (committedTarget != null && (this.canAutoAssist() || this.getAutoFarmContext().isAssistMonsterAttack()
-				|| !this.getAutoFarmContext().isLeaderAssist())) {
-			if (this.spoilCheck()) {
-				return false;
-			}
-			if (!committedTarget.isDead() && GeoEngine.getInstance().canSeeTarget(player, committedTarget)) {
-				if (player.getTarget() != committedTarget) {
-					player.setTarget(committedTarget);
-					player.sendPacket(new MyTargetSelected(committedTarget.getObjectId(),
-							player.getLevel() - committedTarget.getLevel()));
-					player.sendPacket(committedTarget.makeStatusUpdate(9, 10));
-				}
-				
-				return true;
-			}
-			this.setCommittedTarget(null);
-			player.setTarget(null);
-			if (this.cD()) {
-				return false;
-			}
-		}
+        if (player == null || player.isCastingNow()) {
+            return false;
+        }
+        final L2MonsterInstance committedTarget = this.getCommittedTarget();
+        if (committedTarget != null && (this.canAutoAssist() || this.getAutoFarmContext().isAssistMonsterAttack()
+                || !this.getAutoFarmContext().isLeaderAssist())) {
+            if (this.spoilCheck()) {
+                return false;
+            }
+            if (!committedTarget.isDead() && GeoEngine.getInstance().canSeeTarget(player, committedTarget)) {
+                if (player.getTarget() != committedTarget) {
+                    player.setTarget(committedTarget);
+                    player.sendPacket(new MyTargetSelected(committedTarget.getObjectId(),
+                            player.getLevel() - committedTarget.getLevel()));
+                    player.sendPacket(committedTarget.makeStatusUpdate(9, 10));
+                }
+                
+                return true;
+            }
+            this.setCommittedTarget(null);
+            if (this.cD()) {
+                player.setTarget(null);
+                player.sendPacket(new TargetUnselected(player));
+                return false;
+            }
+        }
 
-		if (this.getAutoFarmContext().isLeaderAssist()) {
-			if (player.getParty() == null) {
-				this.setCommittedOwner(null);
-				this.getAutoFarmContext().setLeaderAssist(false, false);
-			} else {
-				if(player.getParty().getLeader() != null) {
-					this.setCommittedOwner(player.getParty().getLeader());
-				}else {
-					this.setCommittedOwner(null);
-				}
-			}
-		}
-		if (this.getCommittedSummon() == null) {
-			this.setCommittedSummon((player.getPet() != null) ? player.getPet() : null);
-		}
-		if (this.getCommittedOwner() != null && !this.getCommittedOwner().isDead()
-				&& this.getAutoFarmContext().isAssistMonsterAttack()) {
-			final L2MonsterInstance leaderTarget;
-			this.setCommittedTarget(leaderTarget = this.getAutoFarmContext().getLeaderTarget(this.getCommittedOwner()));
-			if (leaderTarget != null) {
-				return true;
-			}
-			if (leaderTarget != null && player.getActingSummon().getDistance(leaderTarget.getX(),
-					leaderTarget.getY()) < AutoFarmConfig.RUN_CLOSE_UP_DISTANCE) {
-				final Pair<ScheduledFuture<?>, Location> runAwayFromTargetAndThan = this
-						.runAwayFromTargetAndThan(leaderTarget, player, 500, 100, this);
-				if (runAwayFromTargetAndThan != null) {
-					if (this.getMoveToPair() != null && this.getMoveToPair().getKey() != null) {
-						((ScheduledFuture) this.getMoveToPair().getKey()).cancel(false);
-					}
-					this.setMoveToPair(runAwayFromTargetAndThan);
-					if (this.getCommittedSummon() != null) {
-						// this.getCommittedSummon().getActingSummon().moveToLocation(runAwayFromTargetAndThan.getValue().getX(),
-						// runAwayFromTargetAndThan.getValue().getY(),
-						// runAwayFromTargetAndThan.getValue().getZ(), 0);
-					}
-					return false;
-				}
-			}
-		} else {
-			if (this.getAutoFarmContext().isLeaderAssist()) {
+        if (this.getAutoFarmContext().isLeaderAssist()) {
+            if (player.getParty() == null) {
+                this.setCommittedOwner(null);
+                this.getAutoFarmContext().setLeaderAssist(false, false);
+            } else {
+                if(player.getParty().getLeader() != null) {
+                    this.setCommittedOwner(player.getParty().getLeader());
+                }else {
+                    this.setCommittedOwner(null);
+                }
+            }
+        }
+        if (this.getCommittedSummon() == null) {
+            this.setCommittedSummon((player.getPet() != null) ? player.getPet() : null);
+        }
+        if (this.getCommittedOwner() != null && !this.getCommittedOwner().isDead()
+                && this.getAutoFarmContext().isAssistMonsterAttack()) {
+            final L2MonsterInstance leaderTarget;
+            this.setCommittedTarget(leaderTarget = this.getAutoFarmContext().getLeaderTarget(this.getCommittedOwner()));
+            if (leaderTarget != null && !leaderTarget.isDead()) {
+                return true;
+            }
+            if (leaderTarget != null && player.getActingSummon().getDistance(leaderTarget.getX(),
+                    leaderTarget.getY()) < AutoFarmConfig.RUN_CLOSE_UP_DISTANCE) {
+                final Pair<ScheduledFuture<?>, Location> runAwayFromTargetAndThan = this
+                        .runAwayFromTargetAndThan(leaderTarget, player, 500, 100, this);
+                if (runAwayFromTargetAndThan != null) {
+                    if (this.getMoveToPair() != null && this.getMoveToPair().getKey() != null) {
+                        ((ScheduledFuture) this.getMoveToPair().getKey()).cancel(false);
+                    }
+                    this.setMoveToPair(runAwayFromTargetAndThan);
+                    if (this.getCommittedSummon() != null) {
+                        // this.getCommittedSummon().getActingSummon().moveToLocation(runAwayFromTargetAndThan.getValue().getX(),
+                        // runAwayFromTargetAndThan.getValue().getY(),
+                        // runAwayFromTargetAndThan.getValue().getZ(), 0);
+                    }
+                    player.setTarget(null);
+                    player.sendPacket(new TargetUnselected(player));
+                    return false;
+                }
+            }
+        } else {
+            if (this.getAutoFarmContext().isLeaderAssist()) {
+                if (player.getParty() != null && player.getParty().getLeader().getTarget() != null) {
+                    L2Object mobTarget = player.getParty().getLeader().getTarget();
+                    if (mobTarget instanceof L2MonsterInstance && !((L2MonsterInstance) mobTarget).isDead()) {
+                        this.setCommittedTarget((L2MonsterInstance) mobTarget);
+                        player.setTarget(mobTarget);
+                        player.sendPacket(new MyTargetSelected(mobTarget.getObjectId(), 0));
+                        player.sendPacket(((L2Character) mobTarget).makeStatusUpdate(9, 10));
+                        return true;
+                    }
+                }
+                this.setCommittedTarget(null);
+                player.setTarget(null);
+                player.sendPacket(new TargetUnselected(player));
+                return false;
+            }
 
-				if (player.getParty() != null && player.getParty().getLeader().getTarget() != null) {
+            final List<L2MonsterInstance> aroundNpc = getAutoFarmContext().getAroundNpc(player,
+                    npcInstance -> GeoEngine.getInstance().canSeeTarget(player, npcInstance) && !npcInstance.isDead());
 
-					L2Object mobTarget = player.getParty().getLeader().getTarget();
+            if (aroundNpc.isEmpty() && this.cD() || aroundNpc.size() == 0) {
+                player.setTarget(null);
+                player.sendPacket(new TargetUnselected(player));
+                return false;
+            }
 
-					if (mobTarget instanceof L2MonsterInstance) {
-						this.setCommittedTarget((L2MonsterInstance) mobTarget);
-						player.setTarget(mobTarget);
-						player.sendPacket(new MyTargetSelected(mobTarget.getObjectId(), 0));
-						player.makeStatusUpdate(9, 10);
-					}
-				}
+            ArrayList<Double> dists = new ArrayList<Double>();
 
-				return true;
-			}
+            for (L2Npc npc : aroundNpc) {
+                dists.add(player.getDistance(npc.getX(), npc.getY()));
+            }
 
-			final List<L2MonsterInstance> aroundNpc = getAutoFarmContext().getAroundNpc(player,
-					npcInstance -> GeoEngine.getInstance().canSeeTarget(player, npcInstance) && !npcInstance.isDead());
-
-			if (aroundNpc.isEmpty() && this.cD() || aroundNpc.size() == 0) {
-				return false;
-			}
-
-			ArrayList<Double> dists = new ArrayList<Double>();
-
-			for (L2Npc npc : aroundNpc) {
-				dists.add(player.getDistance(npc.getX(), npc.getY()));
-			}
-
-			int minIndex = minIndex(dists);
-			L2MonsterInstance mob = aroundNpc.get(minIndex);
-			
-			if (!mob.isDead()) {
-				player.setTarget(this.setCommittedTarget(mob));
-				player.sendPacket(new MyTargetSelected(mob.getObjectId(),
-						player.getLevel() - mob.getLevel()));
-				player.makeStatusUpdate(9, 10);
-				return true;
-			}
-		}
-		return false;
-
-	}
+            int minIndex = minIndex(dists);
+            L2MonsterInstance mob = aroundNpc.get(minIndex);
+            
+            if (!mob.isDead()) {
+                player.setTarget(this.setCommittedTarget(mob));
+                player.sendPacket(new MyTargetSelected(mob.getObjectId(),
+                        player.getLevel() - mob.getLevel()));
+                player.sendPacket(mob.makeStatusUpdate(9, 10));
+                return true;
+            }
+        }
+        player.setTarget(null);
+        player.sendPacket(new TargetUnselected(player));
+        return false;
+    }
 
 	public static int minIndex(ArrayList<Double> list) {
 		return list.indexOf(Collections.min(list));
@@ -354,42 +356,40 @@ public abstract class BaseFarmTask implements Runnable {
 		return null;
 	}
 
-	protected final Pair<ScheduledFuture<?>, Location> runAwayFromTargetAndThan(
-			L2Object target, L2Character character, 
-			int distance, int variance, Runnable callback) {
-			
-		Location location = null;
-		try {
-			double angle = Math.toRadians(
-				Util.calculateAngleFrom(target, character));
-			int baseX = character.getX();
-			int baseY = character.getY();
-			int targetX = baseX + (int)(distance * Math.cos(angle));
-			int targetY = baseY + (int)(distance * Math.sin(angle));
-			
-			location = new Location(targetX, targetY, character.getZ());
-			Location safeLocation = Location.findPointToStay(location, variance, 1);
-			if (safeLocation == null) {
-				return null;
-			}
-			
-			ScheduledFuture<?> future = ThreadPoolManager.getInstance().scheduleAi(() -> {
-				character.getAI().setIntention(CtrlIntention.MOVE_TO, safeLocation);
-				if (callback != null) {
-					callback.run();
-				}
-			}, 100);
-			
-			return new Pair<>(future, safeLocation);
-			
-		} catch (Exception e) {
-			_log.error("Failed to calculate runaway position", e);
-			return null;
-		}
+	protected final Pair<ScheduledFuture<?>, Location> runAwayFromTargetAndThan(L2Object paramL2Object,
+			L2Character paramCreature, int paramInt1, int paramInt2, Runnable paramRunnable) {
+		double d = Math.toRadians(Util.calculateAngleFrom(paramL2Object, (L2Object) paramCreature));
+		int i = paramCreature.getX();
+		int j = paramCreature.getY();
+		int k = i + (int) (paramInt1 * Math.cos(d));
+		int m = j + (int) (paramInt1 * Math.sin(d));
+		Location location = Location.findPointToStay(new Location(k, m, paramCreature.getZ()), paramInt2, 1);
+//    for (byte b = 0; b < 10 && !GeoData.getInstance().canSeeTarget(paramL2Object, paramCreature)))
+//      location = Location.findPointToStay(new Location(k, m, paramCreature.getZ()), paramInt2, 0); 
+		Pair<ScheduledFuture<?>, Location> pair = null;
+//    return (paramCreature.isMoving() && paramCreature.getXdestination() != 0 && 
+//    		paramCreature.getXdestination().distance(k, m) <= (paramInt2 * 2)) ? null : (((pair = moveToAndThan(paramCreature, location, paramRunnable)) != null) ? pair : null);
+		return pair;
 	}
 
 	protected boolean preDoUseMagicSkill(L2Skill paramSkill, boolean paramBoolean) {
 		return true;
+	}
+
+	private void restoreTarget(L2PcInstance player) {
+		if (player == null)
+			return;
+		L2MonsterInstance committedTarget = getCommittedTarget();
+		if (committedTarget != null && !committedTarget.isAlikeDead()) {
+			if (player.getTarget() != committedTarget) {
+				player.setTarget(committedTarget);
+				player.sendPacket(new MyTargetSelected(committedTarget.getObjectId(), player.getLevel() - committedTarget.getLevel()));
+				player.sendPacket(committedTarget.makeStatusUpdate(9, 10));
+			}
+		} else {
+			player.setTarget(null);
+			player.sendPacket(new TargetUnselected(player));
+		}
 	}
 
 	protected final void useMagicSkill(L2Skill paramSkill, boolean paramBoolean) {
@@ -398,10 +398,19 @@ public abstract class BaseFarmTask implements Runnable {
 		if (paramSkill == null || player == null || player.isOutOfControl()
 				|| (paramSkill.isToggle() && player.isMounted()))
 			return;
+		
+		// Prevent skill queue overflow - don't use skill if player is casting or attacking
+		if (player.isCastingNow() || player.isAttackingNow()) {
+			restoreTarget(player);
+			return;
+		}
+		
 		if (preDoUseMagicSkill(paramSkill, paramBoolean)) {
 			if (getAutoFarmContext().isExtraDelaySkill())
 				setExtraDelay(System.currentTimeMillis() + AutoFarmConfig.SKILLS_EXTRA_DELAY);
 			b(paramSkill, paramBoolean);
+		} else {
+			restoreTarget(player);
 		}
 	}
 
@@ -410,27 +419,52 @@ public abstract class BaseFarmTask implements Runnable {
 		L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
 		if (paramSkill == null || player == null || player.isOutOfControl())
 			return;
-		if (paramBoolean) {
-			L2Object L2Object = player.getTarget();
-			
-			player.setTarget(player);
-			player.useMagic(paramSkill, true, false);
-			player.setTarget(L2Object);
-
+		
+		// Prevent skill queue overflow - check if player is busy
+		if (player.isCastingNow() || player.isAttackingNow() || player.isCastingSimultaneouslyNow()) {
+			restoreTarget(player);
 			return;
 		}
 		
-		if (player.getTarget() == null)
+		// Check if skill is still on cooldown (skip if not ready)
+		if (player.isSkillDisabled(paramSkill.getId())) {
+			// Apply fast reuse if configured
+			if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
+				player.enableSkill(paramSkill.getId());
+			} else {
+				restoreTarget(player);
+				return; // Skill not ready, skip
+			}
+		}
+		
+		if (paramBoolean) {
+			L2Object skillTarget = player.getTarget();
+			if (skillTarget == null) {
+				skillTarget = player;
+			}
+			
+			player.setTarget(skillTarget);
+			player.useMagic(paramSkill, true, false);
+			
+			restoreTarget(player);
 			return;
+		}
+		
+		if (player.getTarget() == null) {
+			restoreTarget(player);
+			return;
+		}
 
 		L2Character creature = paramSkill.getFirstOfTargetList(player);
-			if(!paramSkill.checkCondition(player, creature)){
-				return;
-			}
+		if(!paramSkill.checkCondition(player, creature)){
+			restoreTarget(player);
+			return;
+		}
 
 		player.setTarget(creature);
 		player.useMagic(paramSkill, true, false);
 		
+		restoreTarget(player);
 	}
 
 	protected L2MonsterInstance getCommittedTarget() {
@@ -469,8 +503,20 @@ public abstract class BaseFarmTask implements Runnable {
 		try {
 
 			L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
-			if (player == null)
+			if (player == null || player.isOnline() != 1 || !getAutoFarmContext().isAutofarming()) {
+				if (getAutoFarmContext().isAutofarming()) {
+					getAutoFarmContext().stopFarmTask(false);
+				}
 				return;
+			}
+			
+			// Trava de sistema: Verifica se o farm exige VIP e se o jogador ainda possui o status
+			if (AutoFarmConfig.AUTO_FARM_FOR_PREMIUM && !player.isVip()) {
+				getAutoFarmContext().stopFarmTask(false);
+				player.sendMessage("AutoFarm desativado: Beneficio VIP expirado.");
+				return;
+			}
+
 			for (String str : AutoFarmConfig.AUTO_FARM_LIMIT_ZONE_NAMES) {
 				if (player.isInsideZone(str)) {
 					getAutoFarmContext().stopFarmTask(false);
@@ -478,6 +524,7 @@ public abstract class BaseFarmTask implements Runnable {
 					return;
 				}
 			}
+			getAutoFarmContext().checkAndUsePotions(player);
 			runImpl();
 		} catch (Throwable throwable) {
 			_log.error("Exception: RunnableImpl.run(): " + throwable, throwable);
@@ -485,13 +532,4 @@ public abstract class BaseFarmTask implements Runnable {
 	}
 
 	public abstract void runImpl() throws Exception;
-
-	private void handleFailure(String reason) {
-		consecutiveFailures++;
-		if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
-			_log.error("Too many consecutive failures", new RuntimeException(reason));
-			getAutoFarmContext().stopFarmTask(false);
-			consecutiveFailures = 0;
-		}
-	}
 }

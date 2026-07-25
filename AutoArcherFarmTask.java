@@ -7,8 +7,6 @@ import com.premium.game.model.actor.instance.L2MonsterInstance;
 import com.premium.game.model.actor.instance.L2PcInstance;
 import com.premium.game.model.world.Location;
 
-import javafx.util.Pair;
-
 public class AutoArcherFarmTask extends BaseFarmTask implements Runnable {
   public AutoArcherFarmTask(AutoFarmContext paramAutoFarmContext) {
     super(paramAutoFarmContext);

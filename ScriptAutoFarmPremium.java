@@ -19,6 +19,7 @@ public class ScriptAutoFarmPremium {
 
 			AutoFarmConfig.load();
 
+			/*
 			_log.info("AutoFarmPremium License Key");
 			
 			if(AutoFarmConfig.LICENSE_CODE.isEmpty()) {
@@ -34,9 +35,10 @@ public class ScriptAutoFarmPremium {
 				
 			}else {
 				
-				Guard.getInstance("eccbc87e4b5ce2fe28308fd9f2a7baf3", AutoFarmConfig.LICENSE_CODE, false);
+				Guard.getInstance("eccbc87e4b5ce2fe28308fd9f2a7baf3", AutoFarmConfig.LICENSE_CODE, true);
 							
 			}
+			*/
 			
 			if (AutoFarmConfig.ALLOW_AUTO_FARM) {
 

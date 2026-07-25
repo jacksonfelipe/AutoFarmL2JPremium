@@ -1,2 +1,0 @@
-﻿# AutoFarmL2JPremium
-# Não esqueça de compartilhar as atualizações para que possamos manter o farm melhorado!

@@ -9,8 +9,6 @@ import com.premium.game.model.actor.instance.L2NpcInstance;
 import com.premium.game.model.actor.instance.L2PcInstance;
 import com.premium.game.model.world.Location;
 
-import javafx.util.Pair;
-
 public class AutoMagicFarmTask extends BaseFarmTask implements Runnable {
   public AutoMagicFarmTask(AutoFarmContext paramAutoFarmContext) {
     super(paramAutoFarmContext);

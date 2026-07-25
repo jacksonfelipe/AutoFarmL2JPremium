@@ -6,6 +6,7 @@ import com.premium.game.model.actor.L2Character;
 import com.premium.game.model.actor.L2Summon;
 import com.premium.game.model.actor.instance.L2PcInstance;
 import com.premium.game.model.world.Location;
+import com.premium.game.network.serverpackets.MyTargetSelected;
 
 public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
   private long Nx = 0L;
@@ -84,11 +85,15 @@ public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
       player.setTarget((L2Object)getCommittedTarget());
       if (GeoEngine.getInstance().canSeeTarget(player, getCommittedTarget())) {
         player.setTarget(getCommittedTarget());
+        player.sendPacket(new MyTargetSelected(getCommittedTarget().getObjectId(), player.getLevel() - getCommittedTarget().getLevel()));
+        player.sendPacket(getCommittedTarget().makeStatusUpdate(9, 10));
         player.getAI().setIntention(CtrlIntention.ATTACK);
        
         if (summon != null && player.getPet() != null && !summon.isDead())
-        summon.setTarget(getCommittedTarget());
-        summon.getAI().setIntention(CtrlIntention.ATTACK);
+        {
+           summon.setTarget(getCommittedTarget());
+           summon.getAI().setIntention(CtrlIntention.ATTACK);
+        }
       } else {
         Location location = getCommittedTarget().getLoc();
         if (summon != null && player.getPet() != null && !summon.isDead())

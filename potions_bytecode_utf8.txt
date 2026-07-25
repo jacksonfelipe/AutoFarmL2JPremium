@@ -1,0 +1,1860 @@
+﻿Compiled from "Potions.java"
+public class com.premium.game.handler.item.Potions implements com.premium.game.handler.IItemHandler {
+  private static final int[] ITEM_IDS;
+
+  public com.premium.game.handler.item.Potions();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return
+
+  private static boolean isEffectReplaceable(com.premium.game.model.actor.L2Playable, com.premium.game.templates.skills.L2EffectType, com.premium.game.model.actor.instance.L2ItemInstance);
+    Code:
+       0: aload_0
+       1: invokevirtual #2                  // Method com/premium/game/model/actor/L2Playable.getAllEffects:()[Lcom/premium/game/model/L2Effect;
+       4: astore_3
+       5: aload_3
+       6: ifnonnull     11
+       9: iconst_1
+      10: ireturn
+      11: aload_0
+      12: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+      15: ifeq          25
+      18: aload_0
+      19: checkcast     #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+      22: goto          32
+      25: aload_0
+      26: checkcast     #4                  // class com/premium/game/model/actor/L2Summon
+      29: invokevirtual #5                  // Method com/premium/game/model/actor/L2Summon.getOwner:()Lcom/premium/game/model/actor/instance/L2PcInstance;
+      32: astore        4
+      34: aload_3
+      35: astore        5
+      37: aload         5
+      39: arraylength
+      40: istore        6
+      42: iconst_0
+      43: istore        7
+      45: iload         7
+      47: iload         6
+      49: if_icmpge     121
+      52: aload         5
+      54: iload         7
+      56: aaload
+      57: astore        8
+      59: aload         8
+      61: invokevirtual #6                  // Method com/premium/game/model/L2Effect.getEffectType:()Lcom/premium/game/templates/skills/L2EffectType;
+      64: aload_1
+      65: if_acmpne     115
+      68: aload         8
+      70: invokevirtual #7                  // Method com/premium/game/model/L2Effect.getSkill:()Lcom/premium/game/model/L2Skill;
+      73: invokevirtual #8                  // Method com/premium/game/model/L2Skill.isPotion:()Z
+      76: ifeq          115
+      79: aload         8
+      81: invokevirtual #9                  // Method com/premium/game/model/L2Effect.getElapsedTaskTime:()I
+      84: aload         8
+      86: invokevirtual #10                 // Method com/premium/game/model/L2Effect.getTotalTaskTime:()I
+      89: iconst_2
+      90: imul
+      91: iconst_3
+      92: idiv
+      93: if_icmple     98
+      96: iconst_1
+      97: ireturn
+      98: aload         4
+     100: getstatic     #11                 // Field com/premium/game/network/SystemMessageId.S1_PREPARED_FOR_REUSE:Lcom/premium/game/network/SystemMessageId;
+     103: invokestatic  #12                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     106: aload_2
+     107: invokevirtual #13                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(Lcom/premium/game/model/actor/instance/L2ItemInstance;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     110: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     113: iconst_0
+     114: ireturn
+     115: iinc          7, 1
+     118: goto          45
+     121: iconst_1
+     122: ireturn
+
+  private static boolean isUseable(com.premium.game.model.actor.L2Playable, com.premium.game.templates.skills.L2EffectType, com.premium.game.model.actor.instance.L2ItemInstance, int);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: aload_2
+       3: invokestatic  #15                 // Method isEffectReplaceable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+       6: ifeq          22
+       9: aload_0
+      10: aload_2
+      11: iload_3
+      12: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+      15: ifeq          22
+      18: iconst_1
+      19: goto          23
+      22: iconst_0
+      23: ireturn
+
+  private static boolean isUseable(com.premium.game.model.actor.L2Playable, com.premium.game.model.actor.instance.L2ItemInstance, int);
+    Code:
+       0: aload_0
+       1: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+       4: ifeq          14
+       7: aload_0
+       8: checkcast     #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+      11: goto          21
+      14: aload_0
+      15: checkcast     #4                  // class com/premium/game/model/actor/L2Summon
+      18: invokevirtual #5                  // Method com/premium/game/model/actor/L2Summon.getOwner:()Lcom/premium/game/model/actor/instance/L2PcInstance;
+      21: astore_3
+      22: aload_3
+      23: iload_2
+      24: invokevirtual #17                 // Method com/premium/game/model/actor/instance/L2PcInstance.isSkillDisabled:(I)Z
+      27: ifeq          46
+      30: aload_3
+      31: getstatic     #11                 // Field com/premium/game/network/SystemMessageId.S1_PREPARED_FOR_REUSE:Lcom/premium/game/network/SystemMessageId;
+      34: invokestatic  #12                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+      37: aload_1
+      38: invokevirtual #13                 // Method com/premium/game/network/serverpackets/SystemMessage.addItemName:(Lcom/premium/game/model/actor/instance/L2ItemInstance;)Lcom/premium/game/network/serverpackets/SystemMessage;
+      41: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      44: iconst_0
+      45: ireturn
+      46: iconst_1
+      47: ireturn
+
+  private static void itemNotForPets(com.premium.game.model.actor.instance.L2PcInstance);
+    Code:
+       0: aload_0
+       1: getstatic     #18                 // Field com/premium/game/network/SystemMessageId.ITEM_NOT_FOR_PETS:Lcom/premium/game/network/SystemMessageId;
+       4: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+       7: return
+
+  public int[] getItemIds();
+    Code:
+       0: getstatic     #20                 // Field ITEM_IDS:[I
+       3: areturn
+
+  public void useItem(com.premium.game.model.actor.L2Playable, com.premium.game.model.actor.instance.L2ItemInstance);
+    Code:
+       0: iconst_0
+       1: istore        4
+       3: aload_1
+       4: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+       7: ifeq          18
+      10: aload_1
+      11: checkcast     #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+      14: astore_3
+      15: goto          37
+      18: aload_1
+      19: instanceof    #21                 // class com/premium/game/model/actor/instance/L2PetInstance
+      22: ifeq          36
+      25: aload_1
+      26: checkcast     #21                 // class com/premium/game/model/actor/instance/L2PetInstance
+      29: invokevirtual #22                 // Method com/premium/game/model/actor/instance/L2PetInstance.getOwner:()Lcom/premium/game/model/actor/instance/L2PcInstance;
+      32: astore_3
+      33: goto          37
+      36: return
+      37: aload_3
+      38: invokevirtual #23                 // Method com/premium/game/model/actor/instance/L2PcInstance.isInOlympiadMode:()Z
+      41: ifeq          52
+      44: aload_3
+      45: getstatic     #24                 // Field com/premium/game/network/SystemMessageId.THIS_ITEM_IS_NOT_AVAILABLE_FOR_THE_OLYMPIAD_EVENT:Lcom/premium/game/network/SystemMessageId;
+      48: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+      51: return
+      52: aload_1
+      53: invokevirtual #25                 // Method com/premium/game/model/actor/L2Playable.isAllSkillsDisabled:()Z
+      56: ifeq          67
+      59: aload_3
+      60: getstatic     #26                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+      63: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      66: return
+      67: aload_3
+      68: getstatic     #27                 // Field com/premium/game/util/FloodProtector$Protected.USE_POTION:Lcom/premium/game/util/FloodProtector$Protected;
+      71: invokestatic  #28                 // Method com/premium/game/util/FloodProtector.tryPerformAction:(Lcom/premium/game/model/actor/instance/L2PcInstance;Lcom/premium/game/util/FloodProtector$Protected;)Z
+      74: ifne          85
+      77: aload_3
+      78: getstatic     #26                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+      81: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      84: return
+      85: aload_2
+      86: invokevirtual #29                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+      89: istore        5
+      91: iload         5
+      93: lookupswitch  { // 85
+
+                    65: 828
+
+                   725: 855
+
+                   726: 784
+
+                   727: 885
+
+                   728: 806
+
+                   733: 915
+
+                   734: 942
+
+                   735: 969
+
+                  1060: 996
+
+                  1061: 1026
+
+                  1073: 996
+
+                  1374: 1056
+
+                  1375: 1083
+
+                  1539: 1110
+
+                  1540: 1140
+
+                  4679: 2359
+
+                  5283: 1170
+
+                  5591: 1220
+
+                  5592: 1220
+
+                  6035: 1262
+
+                  6036: 1262
+
+                  6652: 1481
+
+                  6653: 1496
+
+                  6654: 1511
+
+                  6655: 1526
+
+                  7906: 2437
+
+                  7907: 2464
+
+                  7908: 2491
+
+                  7909: 2518
+
+                  7910: 2545
+
+                  7911: 2572
+
+                  7912: 2596
+
+                  7913: 2623
+
+                  7914: 2650
+
+                  7915: 2677
+
+                  7916: 2704
+
+                  7917: 2731
+
+                  8030: 2758
+
+                  8031: 2758
+
+                  8032: 2758
+
+                  8033: 2758
+
+                  8193: 1814
+
+                  8194: 1874
+
+                  8195: 1935
+
+                  8196: 1996
+
+                  8197: 2057
+
+                  8198: 2118
+
+                  8199: 2180
+
+                  8200: 2242
+
+                  8201: 2304
+
+                  8202: 2332
+
+                  8600: 1541
+
+                  8601: 1556
+
+                  8602: 1571
+
+                  8603: 1586
+
+                  8604: 1601
+
+                  8605: 1616
+
+                  8606: 1631
+
+                  8607: 1646
+
+                  8608: 1661
+
+                  8609: 1676
+
+                  8610: 1691
+
+                  8611: 1706
+
+                  8612: 1721
+
+                  8613: 1760
+
+                  8614: 1787
+
+                  8622: 1301
+
+                  8623: 1301
+
+                  8624: 1301
+
+                  8625: 1301
+
+                  8626: 1301
+
+                  8627: 1301
+
+                  8628: 1361
+
+                  8629: 1361
+
+                  8630: 1361
+
+                  8631: 1361
+
+                  8632: 1361
+
+                  8633: 1361
+
+                  8634: 1421
+
+                  8635: 1421
+
+                  8636: 1421
+
+                  8637: 1421
+
+                  8638: 1421
+
+                  8639: 1421
+
+                  8786: 2398
+               default: 2772
+          }
+     784: getstatic     #30                 // Field com/premium/Config.ALT_MANA_POTIONS:Z
+     787: ifne          791
+     790: return
+     791: aload_0
+     792: aload_1
+     793: sipush        2003
+     796: iconst_1
+     797: aload_2
+     798: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     801: istore        4
+     803: goto          2772
+     806: getstatic     #30                 // Field com/premium/Config.ALT_MANA_POTIONS:Z
+     809: ifne          813
+     812: return
+     813: aload_0
+     814: aload_1
+     815: sipush        2005
+     818: iconst_1
+     819: aload_2
+     820: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     823: istore        4
+     825: goto          2772
+     828: aload_1
+     829: aload_2
+     830: sipush        2001
+     833: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     836: ifne          840
+     839: return
+     840: aload_0
+     841: aload_1
+     842: sipush        2001
+     845: iconst_1
+     846: aload_2
+     847: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     850: istore        4
+     852: goto          2772
+     855: aload_1
+     856: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+     859: aload_2
+     860: sipush        2002
+     863: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     866: ifne          870
+     869: return
+     870: aload_0
+     871: aload_1
+     872: sipush        2002
+     875: iconst_1
+     876: aload_2
+     877: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     880: istore        4
+     882: goto          2772
+     885: aload_1
+     886: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+     889: aload_2
+     890: sipush        2032
+     893: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     896: ifne          900
+     899: return
+     900: aload_0
+     901: aload_1
+     902: sipush        2032
+     905: iconst_1
+     906: aload_2
+     907: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     910: istore        4
+     912: goto          2772
+     915: aload_1
+     916: aload_2
+     917: sipush        2010
+     920: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     923: ifne          927
+     926: return
+     927: aload_0
+     928: aload_1
+     929: sipush        2010
+     932: iconst_1
+     933: aload_2
+     934: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     937: istore        4
+     939: goto          2772
+     942: aload_1
+     943: aload_2
+     944: sipush        2011
+     947: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     950: ifne          954
+     953: return
+     954: aload_0
+     955: aload_1
+     956: sipush        2011
+     959: iconst_1
+     960: aload_2
+     961: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     964: istore        4
+     966: goto          2772
+     969: aload_1
+     970: aload_2
+     971: sipush        2012
+     974: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+     977: ifne          981
+     980: return
+     981: aload_0
+     982: aload_1
+     983: sipush        2012
+     986: iconst_1
+     987: aload_2
+     988: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+     991: istore        4
+     993: goto          2772
+     996: aload_1
+     997: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1000: aload_2
+    1001: sipush        2031
+    1004: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1007: ifne          1011
+    1010: return
+    1011: aload_0
+    1012: aload_1
+    1013: sipush        2031
+    1016: iconst_1
+    1017: aload_2
+    1018: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1021: istore        4
+    1023: goto          2772
+    1026: aload_1
+    1027: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1030: aload_2
+    1031: sipush        2032
+    1034: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1037: ifne          1041
+    1040: return
+    1041: aload_0
+    1042: aload_1
+    1043: sipush        2032
+    1046: iconst_1
+    1047: aload_2
+    1048: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1051: istore        4
+    1053: goto          2772
+    1056: aload_1
+    1057: aload_2
+    1058: sipush        2034
+    1061: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1064: ifne          1068
+    1067: return
+    1068: aload_0
+    1069: aload_1
+    1070: sipush        2034
+    1073: iconst_1
+    1074: aload_2
+    1075: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1078: istore        4
+    1080: goto          2772
+    1083: aload_1
+    1084: aload_2
+    1085: sipush        2035
+    1088: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1091: ifne          1095
+    1094: return
+    1095: aload_0
+    1096: aload_1
+    1097: sipush        2035
+    1100: iconst_1
+    1101: aload_2
+    1102: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1105: istore        4
+    1107: goto          2772
+    1110: aload_1
+    1111: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1114: aload_2
+    1115: sipush        2037
+    1118: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1121: ifne          1125
+    1124: return
+    1125: aload_0
+    1126: aload_1
+    1127: sipush        2037
+    1130: iconst_1
+    1131: aload_2
+    1132: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1135: istore        4
+    1137: goto          2772
+    1140: aload_1
+    1141: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1144: aload_2
+    1145: sipush        2038
+    1148: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1151: ifne          1155
+    1154: return
+    1155: aload_0
+    1156: aload_1
+    1157: sipush        2038
+    1160: iconst_1
+    1161: aload_2
+    1162: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1165: istore        4
+    1167: goto          2772
+    1170: aload_1
+    1171: getstatic     #32                 // Field com/premium/game/templates/skills/L2EffectType.HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1174: aload_2
+    1175: sipush        2136
+    1178: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1181: ifne          1185
+    1184: return
+    1185: aload_1
+    1186: new           #34                 // class com/premium/game/network/serverpackets/MagicSkillUse
+    1189: dup
+    1190: aload_1
+    1191: aload_1
+    1192: sipush        2136
+    1195: iconst_1
+    1196: iconst_1
+    1197: iconst_0
+    1198: iconst_0
+    1199: invokespecial #35                 // Method com/premium/game/network/serverpackets/MagicSkillUse."<init>":(Lcom/premium/game/model/actor/L2Character;Lcom/premium/game/model/actor/L2Character;IIIIZ)V
+    1202: invokevirtual #36                 // Method com/premium/game/model/actor/L2Playable.broadcastPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    1205: aload_0
+    1206: aload_1
+    1207: sipush        2136
+    1210: iconst_1
+    1211: aload_2
+    1212: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1215: istore        4
+    1217: goto          2772
+    1220: aload_1
+    1221: getstatic     #37                 // Field com/premium/game/templates/skills/L2EffectType.COMBAT_POINT_HEAL_OVER_TIME:Lcom/premium/game/templates/skills/L2EffectType;
+    1224: aload_2
+    1225: sipush        2166
+    1228: invokestatic  #33                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/templates/skills/L2EffectType;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1231: ifne          1235
+    1234: return
+    1235: aload_0
+    1236: aload_1
+    1237: sipush        2166
+    1240: iload         5
+    1242: sipush        5591
+    1245: if_icmpne     1252
+    1248: iconst_1
+    1249: goto          1253
+    1252: iconst_2
+    1253: aload_2
+    1254: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1257: istore        4
+    1259: goto          2772
+    1262: aload_1
+    1263: aload_2
+    1264: sipush        2169
+    1267: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1270: ifne          1274
+    1273: return
+    1274: aload_0
+    1275: aload_1
+    1276: sipush        2169
+    1279: iload         5
+    1281: sipush        6035
+    1284: if_icmpne     1291
+    1287: iconst_1
+    1288: goto          1292
+    1291: iconst_2
+    1292: aload_2
+    1293: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1296: istore        4
+    1298: goto          2772
+    1301: aload_1
+    1302: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1305: ifne          1313
+    1308: aload_3
+    1309: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1312: return
+    1313: aload_3
+    1314: aload_2
+    1315: sipush        2287
+    1318: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1321: ifne          1325
+    1324: return
+    1325: aload_3
+    1326: invokevirtual #39                 // Method com/premium/game/model/actor/instance/L2PcInstance.getExpertiseIndex:()I
+    1329: i2b
+    1330: istore        6
+    1332: aload_0
+    1333: aload_3
+    1334: sipush        2287
+    1337: iload         6
+    1339: iconst_5
+    1340: if_icmple     1348
+    1343: iload         6
+    1345: goto          1352
+    1348: iload         6
+    1350: iconst_1
+    1351: iadd
+    1352: aload_2
+    1353: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1356: istore        4
+    1358: goto          2772
+    1361: aload_1
+    1362: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1365: ifne          1373
+    1368: aload_3
+    1369: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1372: return
+    1373: aload_3
+    1374: aload_2
+    1375: sipush        2288
+    1378: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1381: ifne          1385
+    1384: return
+    1385: aload_3
+    1386: invokevirtual #39                 // Method com/premium/game/model/actor/instance/L2PcInstance.getExpertiseIndex:()I
+    1389: i2b
+    1390: istore        6
+    1392: aload_0
+    1393: aload_3
+    1394: sipush        2288
+    1397: iload         6
+    1399: iconst_5
+    1400: if_icmple     1408
+    1403: iload         6
+    1405: goto          1412
+    1408: iload         6
+    1410: iconst_1
+    1411: iadd
+    1412: aload_2
+    1413: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1416: istore        4
+    1418: goto          2772
+    1421: aload_1
+    1422: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1425: ifne          1433
+    1428: aload_3
+    1429: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1432: return
+    1433: aload_3
+    1434: aload_2
+    1435: sipush        2289
+    1438: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    1441: ifne          1445
+    1444: return
+    1445: aload_3
+    1446: invokevirtual #39                 // Method com/premium/game/model/actor/instance/L2PcInstance.getExpertiseIndex:()I
+    1449: i2b
+    1450: istore        6
+    1452: aload_0
+    1453: aload_3
+    1454: sipush        2289
+    1457: iload         6
+    1459: iconst_5
+    1460: if_icmple     1468
+    1463: iload         6
+    1465: goto          1472
+    1468: iload         6
+    1470: iconst_1
+    1471: iadd
+    1472: aload_2
+    1473: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1476: istore        4
+    1478: goto          2772
+    1481: aload_0
+    1482: aload_1
+    1483: sipush        2231
+    1486: iconst_1
+    1487: aload_2
+    1488: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1491: istore        4
+    1493: goto          2772
+    1496: aload_0
+    1497: aload_1
+    1498: sipush        2233
+    1501: iconst_1
+    1502: aload_2
+    1503: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1506: istore        4
+    1508: goto          2772
+    1511: aload_0
+    1512: aload_1
+    1513: sipush        2233
+    1516: iconst_2
+    1517: aload_2
+    1518: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1521: istore        4
+    1523: goto          2772
+    1526: aload_0
+    1527: aload_1
+    1528: sipush        2232
+    1531: iconst_1
+    1532: aload_2
+    1533: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1536: istore        4
+    1538: goto          2772
+    1541: aload_0
+    1542: aload_1
+    1543: sipush        2278
+    1546: iconst_1
+    1547: aload_2
+    1548: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1551: istore        4
+    1553: goto          2772
+    1556: aload_0
+    1557: aload_1
+    1558: sipush        2278
+    1561: iconst_2
+    1562: aload_2
+    1563: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1566: istore        4
+    1568: goto          2772
+    1571: aload_0
+    1572: aload_1
+    1573: sipush        2278
+    1576: iconst_3
+    1577: aload_2
+    1578: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1581: istore        4
+    1583: goto          2772
+    1586: aload_0
+    1587: aload_1
+    1588: sipush        2279
+    1591: iconst_1
+    1592: aload_2
+    1593: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1596: istore        4
+    1598: goto          2772
+    1601: aload_0
+    1602: aload_1
+    1603: sipush        2279
+    1606: iconst_2
+    1607: aload_2
+    1608: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1611: istore        4
+    1613: goto          2772
+    1616: aload_0
+    1617: aload_1
+    1618: sipush        2279
+    1621: iconst_3
+    1622: aload_2
+    1623: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1626: istore        4
+    1628: goto          2772
+    1631: aload_0
+    1632: aload_1
+    1633: sipush        2280
+    1636: iconst_1
+    1637: aload_2
+    1638: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1641: istore        4
+    1643: goto          2772
+    1646: aload_0
+    1647: aload_1
+    1648: sipush        2281
+    1651: iconst_1
+    1652: aload_2
+    1653: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1656: istore        4
+    1658: goto          2772
+    1661: aload_0
+    1662: aload_1
+    1663: sipush        2282
+    1666: iconst_1
+    1667: aload_2
+    1668: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1671: istore        4
+    1673: goto          2772
+    1676: aload_0
+    1677: aload_1
+    1678: sipush        2283
+    1681: iconst_1
+    1682: aload_2
+    1683: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1686: istore        4
+    1688: goto          2772
+    1691: aload_0
+    1692: aload_1
+    1693: sipush        2284
+    1696: iconst_1
+    1697: aload_2
+    1698: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1701: istore        4
+    1703: goto          2772
+    1706: aload_0
+    1707: aload_1
+    1708: sipush        2285
+    1711: iconst_1
+    1712: aload_2
+    1713: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1716: istore        4
+    1718: goto          2772
+    1721: aload_0
+    1722: aload_1
+    1723: sipush        2280
+    1726: iconst_1
+    1727: aload_2
+    1728: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1731: istore        4
+    1733: aload_0
+    1734: aload_1
+    1735: sipush        2282
+    1738: iconst_1
+    1739: aload_2
+    1740: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1743: istore        4
+    1745: aload_0
+    1746: aload_1
+    1747: sipush        2284
+    1750: iconst_1
+    1751: aload_2
+    1752: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1755: istore        4
+    1757: goto          2772
+    1760: aload_0
+    1761: aload_1
+    1762: sipush        2281
+    1765: iconst_1
+    1766: aload_2
+    1767: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1770: istore        4
+    1772: aload_0
+    1773: aload_1
+    1774: sipush        2283
+    1777: iconst_1
+    1778: aload_2
+    1779: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1782: istore        4
+    1784: goto          2772
+    1787: aload_0
+    1788: aload_1
+    1789: sipush        2278
+    1792: iconst_3
+    1793: aload_2
+    1794: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1797: istore        4
+    1799: aload_0
+    1800: aload_1
+    1801: sipush        2279
+    1804: iconst_3
+    1805: aload_2
+    1806: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1809: istore        4
+    1811: goto          2772
+    1814: aload_1
+    1815: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1818: ifne          1826
+    1821: aload_3
+    1822: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1825: return
+    1826: aload_3
+    1827: sipush        1315
+    1830: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    1833: iconst_3
+    1834: if_icmpgt     1859
+    1837: aload_3
+    1838: ldc           #41                 // String Consume
+    1840: aload_2
+    1841: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    1844: iconst_1
+    1845: aconst_null
+    1846: iconst_0
+    1847: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    1850: pop
+    1851: aload_3
+    1852: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    1855: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1858: return
+    1859: aload_0
+    1860: aload_3
+    1861: sipush        2274
+    1864: iconst_1
+    1865: aload_2
+    1866: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1869: istore        4
+    1871: goto          2772
+    1874: aload_1
+    1875: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1878: ifne          1886
+    1881: aload_3
+    1882: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1885: return
+    1886: aload_3
+    1887: sipush        1315
+    1890: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    1893: bipush        6
+    1895: if_icmpgt     1920
+    1898: aload_3
+    1899: ldc           #41                 // String Consume
+    1901: aload_2
+    1902: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    1905: iconst_1
+    1906: aconst_null
+    1907: iconst_0
+    1908: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    1911: pop
+    1912: aload_3
+    1913: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    1916: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1919: return
+    1920: aload_0
+    1921: aload_3
+    1922: sipush        2274
+    1925: iconst_2
+    1926: aload_2
+    1927: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1930: istore        4
+    1932: goto          2772
+    1935: aload_1
+    1936: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    1939: ifne          1947
+    1942: aload_3
+    1943: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    1946: return
+    1947: aload_3
+    1948: sipush        1315
+    1951: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    1954: bipush        9
+    1956: if_icmpgt     1981
+    1959: aload_3
+    1960: ldc           #41                 // String Consume
+    1962: aload_2
+    1963: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    1966: iconst_1
+    1967: aconst_null
+    1968: iconst_0
+    1969: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    1972: pop
+    1973: aload_3
+    1974: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    1977: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    1980: return
+    1981: aload_0
+    1982: aload_3
+    1983: sipush        2274
+    1986: iconst_3
+    1987: aload_2
+    1988: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    1991: istore        4
+    1993: goto          2772
+    1996: aload_1
+    1997: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2000: ifne          2008
+    2003: aload_3
+    2004: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2007: return
+    2008: aload_3
+    2009: sipush        1315
+    2012: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    2015: bipush        12
+    2017: if_icmpgt     2042
+    2020: aload_3
+    2021: ldc           #41                 // String Consume
+    2023: aload_2
+    2024: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2027: iconst_1
+    2028: aconst_null
+    2029: iconst_0
+    2030: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2033: pop
+    2034: aload_3
+    2035: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    2038: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    2041: return
+    2042: aload_0
+    2043: aload_3
+    2044: sipush        2274
+    2047: iconst_4
+    2048: aload_2
+    2049: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2052: istore        4
+    2054: goto          2772
+    2057: aload_1
+    2058: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2061: ifne          2069
+    2064: aload_3
+    2065: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2068: return
+    2069: aload_3
+    2070: sipush        1315
+    2073: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    2076: bipush        15
+    2078: if_icmpgt     2103
+    2081: aload_3
+    2082: ldc           #41                 // String Consume
+    2084: aload_2
+    2085: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2088: iconst_1
+    2089: aconst_null
+    2090: iconst_0
+    2091: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2094: pop
+    2095: aload_3
+    2096: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    2099: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    2102: return
+    2103: aload_0
+    2104: aload_3
+    2105: sipush        2274
+    2108: iconst_5
+    2109: aload_2
+    2110: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2113: istore        4
+    2115: goto          2772
+    2118: aload_1
+    2119: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2122: ifne          2130
+    2125: aload_3
+    2126: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2129: return
+    2130: aload_3
+    2131: sipush        1315
+    2134: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    2137: bipush        18
+    2139: if_icmpgt     2164
+    2142: aload_3
+    2143: ldc           #41                 // String Consume
+    2145: aload_2
+    2146: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2149: iconst_1
+    2150: aconst_null
+    2151: iconst_0
+    2152: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2155: pop
+    2156: aload_3
+    2157: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    2160: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    2163: return
+    2164: aload_0
+    2165: aload_3
+    2166: sipush        2274
+    2169: bipush        6
+    2171: aload_2
+    2172: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2175: istore        4
+    2177: goto          2772
+    2180: aload_1
+    2181: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2184: ifne          2192
+    2187: aload_3
+    2188: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2191: return
+    2192: aload_3
+    2193: sipush        1315
+    2196: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    2199: bipush        21
+    2201: if_icmpgt     2226
+    2204: aload_3
+    2205: ldc           #41                 // String Consume
+    2207: aload_2
+    2208: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2211: iconst_1
+    2212: aconst_null
+    2213: iconst_0
+    2214: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2217: pop
+    2218: aload_3
+    2219: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    2222: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    2225: return
+    2226: aload_0
+    2227: aload_3
+    2228: sipush        2274
+    2231: bipush        7
+    2233: aload_2
+    2234: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2237: istore        4
+    2239: goto          2772
+    2242: aload_1
+    2243: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2246: ifne          2254
+    2249: aload_3
+    2250: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2253: return
+    2254: aload_3
+    2255: sipush        1315
+    2258: invokevirtual #40                 // Method com/premium/game/model/actor/instance/L2PcInstance.getSkillLevel:(I)I
+    2261: bipush        24
+    2263: if_icmpgt     2288
+    2266: aload_3
+    2267: ldc           #41                 // String Consume
+    2269: aload_2
+    2270: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2273: iconst_1
+    2274: aconst_null
+    2275: iconst_0
+    2276: invokevirtual #43                 // Method com/premium/game/model/actor/instance/L2PcInstance.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2279: pop
+    2280: aload_3
+    2281: getstatic     #44                 // Field com/premium/game/network/SystemMessageId.NOTHING_HAPPENED:Lcom/premium/game/network/SystemMessageId;
+    2284: invokevirtual #19                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/SystemMessageId;)V
+    2287: return
+    2288: aload_0
+    2289: aload_3
+    2290: sipush        2274
+    2293: bipush        8
+    2295: aload_2
+    2296: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2299: istore        4
+    2301: goto          2772
+    2304: aload_1
+    2305: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2308: ifne          2316
+    2311: aload_3
+    2312: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2315: return
+    2316: aload_0
+    2317: aload_3
+    2318: sipush        2274
+    2321: bipush        9
+    2323: aload_2
+    2324: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2327: istore        4
+    2329: goto          2772
+    2332: aload_1
+    2333: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2336: ifne          2344
+    2339: aload_3
+    2340: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2343: return
+    2344: aload_0
+    2345: aload_3
+    2346: sipush        2275
+    2349: iconst_1
+    2350: aload_2
+    2351: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2354: istore        4
+    2356: goto          2772
+    2359: aload_1
+    2360: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2363: ifne          2371
+    2366: aload_3
+    2367: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2370: return
+    2371: aload_3
+    2372: aload_2
+    2373: sipush        2076
+    2376: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2379: ifne          2383
+    2382: return
+    2383: aload_0
+    2384: aload_3
+    2385: sipush        2076
+    2388: iconst_1
+    2389: aload_2
+    2390: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2393: istore        4
+    2395: goto          2772
+    2398: aload_1
+    2399: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+    2402: ifne          2410
+    2405: aload_3
+    2406: invokestatic  #38                 // Method itemNotForPets:(Lcom/premium/game/model/actor/instance/L2PcInstance;)V
+    2409: return
+    2410: aload_3
+    2411: aload_2
+    2412: sipush        2305
+    2415: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2418: ifne          2422
+    2421: return
+    2422: aload_0
+    2423: aload_3
+    2424: sipush        2305
+    2427: iconst_1
+    2428: aload_2
+    2429: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2432: istore        4
+    2434: goto          2772
+    2437: aload_1
+    2438: aload_2
+    2439: sipush        2248
+    2442: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2445: ifne          2449
+    2448: return
+    2449: aload_0
+    2450: aload_1
+    2451: sipush        2248
+    2454: iconst_1
+    2455: aload_2
+    2456: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2459: istore        4
+    2461: goto          2772
+    2464: aload_1
+    2465: aload_2
+    2466: sipush        2249
+    2469: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2472: ifne          2476
+    2475: return
+    2476: aload_0
+    2477: aload_1
+    2478: sipush        2249
+    2481: iconst_1
+    2482: aload_2
+    2483: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2486: istore        4
+    2488: goto          2772
+    2491: aload_1
+    2492: aload_2
+    2493: sipush        2250
+    2496: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2499: ifne          2503
+    2502: return
+    2503: aload_0
+    2504: aload_1
+    2505: sipush        2250
+    2508: iconst_1
+    2509: aload_2
+    2510: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2513: istore        4
+    2515: goto          2772
+    2518: aload_1
+    2519: aload_2
+    2520: sipush        2251
+    2523: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2526: ifne          2530
+    2529: return
+    2530: aload_0
+    2531: aload_1
+    2532: sipush        2251
+    2535: iconst_1
+    2536: aload_2
+    2537: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2540: istore        4
+    2542: goto          2772
+    2545: aload_1
+    2546: aload_2
+    2547: sipush        2252
+    2550: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2553: ifne          2557
+    2556: return
+    2557: aload_0
+    2558: aload_1
+    2559: sipush        2252
+    2562: iconst_1
+    2563: aload_2
+    2564: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2567: istore        4
+    2569: goto          2772
+    2572: aload_1
+    2573: aload_2
+    2574: sipush        2253
+    2577: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2580: ifne          2584
+    2583: return
+    2584: aload_0
+    2585: aload_1
+    2586: sipush        2253
+    2589: iconst_1
+    2590: aload_2
+    2591: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2594: istore        4
+    2596: aload_1
+    2597: aload_2
+    2598: sipush        2254
+    2601: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2604: ifne          2608
+    2607: return
+    2608: aload_0
+    2609: aload_1
+    2610: sipush        2254
+    2613: iconst_1
+    2614: aload_2
+    2615: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2618: istore        4
+    2620: goto          2772
+    2623: aload_1
+    2624: aload_2
+    2625: sipush        2255
+    2628: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2631: ifne          2635
+    2634: return
+    2635: aload_0
+    2636: aload_1
+    2637: sipush        2255
+    2640: iconst_1
+    2641: aload_2
+    2642: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2645: istore        4
+    2647: goto          2772
+    2650: aload_1
+    2651: aload_2
+    2652: sipush        2256
+    2655: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2658: ifne          2662
+    2661: return
+    2662: aload_0
+    2663: aload_1
+    2664: sipush        2256
+    2667: iconst_1
+    2668: aload_2
+    2669: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2672: istore        4
+    2674: goto          2772
+    2677: aload_1
+    2678: aload_2
+    2679: sipush        2257
+    2682: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2685: ifne          2689
+    2688: return
+    2689: aload_0
+    2690: aload_1
+    2691: sipush        2257
+    2694: iconst_1
+    2695: aload_2
+    2696: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2699: istore        4
+    2701: goto          2772
+    2704: aload_1
+    2705: aload_2
+    2706: sipush        2258
+    2709: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2712: ifne          2716
+    2715: return
+    2716: aload_0
+    2717: aload_1
+    2718: sipush        2258
+    2721: iconst_1
+    2722: aload_2
+    2723: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2726: istore        4
+    2728: goto          2772
+    2731: aload_1
+    2732: aload_2
+    2733: sipush        2259
+    2736: invokestatic  #16                 // Method isUseable:(Lcom/premium/game/model/actor/L2Playable;Lcom/premium/game/model/actor/instance/L2ItemInstance;I)Z
+    2739: ifne          2743
+    2742: return
+    2743: aload_0
+    2744: aload_1
+    2745: sipush        2259
+    2748: iconst_1
+    2749: aload_2
+    2750: invokevirtual #31                 // Method usePotion:(Lcom/premium/game/model/actor/L2Playable;IILcom/premium/game/model/actor/instance/L2ItemInstance;)Z
+    2753: istore        4
+    2755: goto          2772
+    2758: invokestatic  #45                 // Method com/premium/game/manager/clanhallsiege/RainbowSpringSiege.getInstance:()Lcom/premium/game/manager/clanhallsiege/RainbowSpringSiege;
+    2761: aload_1
+    2762: iload         5
+    2764: invokevirtual #46                 // Method com/premium/game/manager/clanhallsiege/RainbowSpringSiege.usePotion:(Lcom/premium/game/model/actor/L2Playable;I)Z
+    2767: istore        4
+    2769: goto          2772
+    2772: iload         4
+    2774: ifeq          2791
+    2777: aload_1
+    2778: ldc           #41                 // String Consume
+    2780: aload_2
+    2781: invokevirtual #42                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getObjectId:()I
+    2784: iconst_1
+    2785: aconst_null
+    2786: iconst_0
+    2787: invokevirtual #47                 // Method com/premium/game/model/actor/L2Playable.destroyItem:(Ljava/lang/String;IILcom/premium/game/model/L2Object;Z)Z
+    2790: pop
+    2791: aload_1
+    2792: getstatic     #26                 // Field com/premium/game/network/serverpackets/ActionFailed.STATIC_PACKET:Lcom/premium/game/network/serverpackets/ActionFailed;
+    2795: invokevirtual #48                 // Method com/premium/game/model/actor/L2Playable.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+    2798: return
+
+  public void useItem(com.premium.game.model.actor.L2Playable, com.premium.game.model.actor.instance.L2ItemInstance, boolean);
+    Code:
+       0: return
+
+  public boolean usePotion(com.premium.game.model.actor.L2Playable, int, int, com.premium.game.model.actor.instance.L2ItemInstance);
+    Code:
+       0: invokestatic  #49                 // Method com/premium/game/datatables/xml/SkillTable.getInstance:()Lcom/premium/game/datatables/xml/SkillTable;
+       3: iload_2
+       4: iload_3
+       5: invokevirtual #50                 // Method com/premium/game/datatables/xml/SkillTable.getInfo:(II)Lcom/premium/game/model/L2Skill;
+       8: astore        5
+      10: aload         5
+      12: ifnull        247
+      15: aload_1
+      16: aload         5
+      18: invokevirtual #51                 // Method com/premium/game/model/L2Skill.getId:()Ljava/lang/Integer;
+      21: invokevirtual #52                 // Method java/lang/Integer.intValue:()I
+      24: invokevirtual #53                 // Method com/premium/game/model/actor/L2Playable.isSkillDisabled:(I)Z
+      27: ifeq          47
+      30: aload_1
+      31: getstatic     #11                 // Field com/premium/game/network/SystemMessageId.S1_PREPARED_FOR_REUSE:Lcom/premium/game/network/SystemMessageId;
+      34: invokestatic  #12                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+      37: aload         5
+      39: invokevirtual #54                 // Method com/premium/game/network/serverpackets/SystemMessage.addSkillName:(Lcom/premium/game/model/L2Skill;)Lcom/premium/game/network/serverpackets/SystemMessage;
+      42: invokevirtual #48                 // Method com/premium/game/model/actor/L2Playable.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      45: iconst_0
+      46: ireturn
+      47: aload_1
+      48: aload         5
+      50: invokevirtual #55                 // Method com/premium/game/model/actor/L2Playable.doSimultaneousCast:(Lcom/premium/game/model/L2Skill;)V
+      53: aload         5
+      55: invokevirtual #56                 // Method com/premium/game/model/L2Skill.getReuseDelay:()I
+      58: sipush        500
+      61: if_icmple     98
+      64: aload_1
+      65: new           #57                 // class com/premium/game/network/serverpackets/UseSharedGroupItem
+      68: dup
+      69: aload         4
+      71: invokevirtual #29                 // Method com/premium/game/model/actor/instance/L2ItemInstance.getItemId:()I
+      74: aload         5
+      76: invokevirtual #51                 // Method com/premium/game/model/L2Skill.getId:()Ljava/lang/Integer;
+      79: invokevirtual #52                 // Method java/lang/Integer.intValue:()I
+      82: aload         5
+      84: invokevirtual #56                 // Method com/premium/game/model/L2Skill.getReuseDelay:()I
+      87: aload         5
+      89: invokevirtual #56                 // Method com/premium/game/model/L2Skill.getReuseDelay:()I
+      92: invokespecial #58                 // Method com/premium/game/network/serverpackets/UseSharedGroupItem."<init>":(IIII)V
+      95: invokevirtual #48                 // Method com/premium/game/model/actor/L2Playable.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+      98: aload_1
+      99: instanceof    #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+     102: ifeq          214
+     105: aload_1
+     106: checkcast     #3                  // class com/premium/game/model/actor/instance/L2PcInstance
+     109: astore        6
+     111: iload_2
+     112: sipush        2031
+     115: if_icmpeq     132
+     118: iload_2
+     119: sipush        2032
+     122: if_icmpeq     132
+     125: iload_2
+     126: sipush        2037
+     129: if_icmpne     144
+     132: aload         6
+     134: iload_2
+     135: iload_3
+     136: bipush        15
+     138: invokevirtual #59                 // Method com/premium/game/model/actor/instance/L2PcInstance.shortBuffStatusUpdate:(III)V
+     141: goto          193
+     144: iload_2
+     145: sipush        2277
+     148: if_icmple     158
+     151: iload_2
+     152: sipush        2286
+     155: if_icmplt     172
+     158: iload_2
+     159: sipush        2512
+     162: if_icmplt     193
+     165: iload_2
+     166: sipush        2514
+     169: if_icmpgt     193
+     172: aload         6
+     174: invokevirtual #60                 // Method com/premium/game/model/actor/instance/L2PcInstance.getPet:()Lcom/premium/game/model/actor/L2Summon;
+     177: instanceof    #61                 // class com/premium/game/model/actor/instance/L2SummonInstance
+     180: ifeq          193
+     183: aload         6
+     185: invokevirtual #60                 // Method com/premium/game/model/actor/instance/L2PcInstance.getPet:()Lcom/premium/game/model/actor/L2Summon;
+     188: aload         5
+     190: invokevirtual #62                 // Method com/premium/game/model/actor/L2Summon.doSimultaneousCast:(Lcom/premium/game/model/L2Skill;)V
+     193: aload         6
+     195: invokevirtual #63                 // Method com/premium/game/model/actor/instance/L2PcInstance.isSitting:()Z
+     198: ifeq          209
+     201: aload         5
+     203: invokevirtual #8                  // Method com/premium/game/model/L2Skill.isPotion:()Z
+     206: ifeq          211
+     209: iconst_1
+     210: ireturn
+     211: goto          247
+     214: aload_1
+     215: instanceof    #21                 // class com/premium/game/model/actor/instance/L2PetInstance
+     218: ifeq          247
+     221: aload_1
+     222: checkcast     #21                 // class com/premium/game/model/actor/instance/L2PetInstance
+     225: invokevirtual #22                 // Method com/premium/game/model/actor/instance/L2PetInstance.getOwner:()Lcom/premium/game/model/actor/instance/L2PcInstance;
+     228: getstatic     #64                 // Field com/premium/game/network/SystemMessageId.PET_USES_S1:Lcom/premium/game/network/SystemMessageId;
+     231: invokestatic  #12                 // Method com/premium/game/network/serverpackets/SystemMessage.getSystemMessage:(Lcom/premium/game/network/SystemMessageId;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     234: aload         5
+     236: invokevirtual #65                 // Method com/premium/game/model/L2Skill.getName:()Ljava/lang/String;
+     239: invokevirtual #66                 // Method com/premium/game/network/serverpackets/SystemMessage.addString:(Ljava/lang/String;)Lcom/premium/game/network/serverpackets/SystemMessage;
+     242: invokevirtual #14                 // Method com/premium/game/model/actor/instance/L2PcInstance.sendPacket:(Lcom/premium/game/network/serverpackets/L2GameServerPacket;)V
+     245: iconst_1
+     246: ireturn
+     247: iconst_0
+     248: ireturn
+
+  static {};
+    Code:
+       0: bipush        85
+       2: newarray       int
+       4: dup
+       5: iconst_0
+       6: bipush        65
+       8: iastore
+       9: dup
+      10: iconst_1
+      11: sipush        725
+      14: iastore
+      15: dup
+      16: iconst_2
+      17: sipush        726
+      20: iastore
+      21: dup
+      22: iconst_3
+      23: sipush        727
+      26: iastore
+      27: dup
+      28: iconst_4
+      29: sipush        728
+      32: iastore
+      33: dup
+      34: iconst_5
+      35: sipush        733
+      38: iastore
+      39: dup
+      40: bipush        6
+      42: sipush        734
+      45: iastore
+      46: dup
+      47: bipush        7
+      49: sipush        735
+      52: iastore
+      53: dup
+      54: bipush        8
+      56: sipush        1060
+      59: iastore
+      60: dup
+      61: bipush        9
+      63: sipush        1061
+      66: iastore
+      67: dup
+      68: bipush        10
+      70: sipush        1073
+      73: iastore
+      74: dup
+      75: bipush        11
+      77: sipush        1374
+      80: iastore
+      81: dup
+      82: bipush        12
+      84: sipush        1375
+      87: iastore
+      88: dup
+      89: bipush        13
+      91: sipush        1539
+      94: iastore
+      95: dup
+      96: bipush        14
+      98: sipush        1540
+     101: iastore
+     102: dup
+     103: bipush        15
+     105: sipush        5283
+     108: iastore
+     109: dup
+     110: bipush        16
+     112: sipush        5591
+     115: iastore
+     116: dup
+     117: bipush        17
+     119: sipush        5592
+     122: iastore
+     123: dup
+     124: bipush        18
+     126: sipush        6035
+     129: iastore
+     130: dup
+     131: bipush        19
+     133: sipush        6036
+     136: iastore
+     137: dup
+     138: bipush        20
+     140: sipush        6652
+     143: iastore
+     144: dup
+     145: bipush        21
+     147: sipush        6653
+     150: iastore
+     151: dup
+     152: bipush        22
+     154: sipush        6654
+     157: iastore
+     158: dup
+     159: bipush        23
+     161: sipush        6655
+     164: iastore
+     165: dup
+     166: bipush        24
+     168: sipush        8193
+     171: iastore
+     172: dup
+     173: bipush        25
+     175: sipush        8194
+     178: iastore
+     179: dup
+     180: bipush        26
+     182: sipush        8195
+     185: iastore
+     186: dup
+     187: bipush        27
+     189: sipush        8196
+     192: iastore
+     193: dup
+     194: bipush        28
+     196: sipush        8197
+     199: iastore
+     200: dup
+     201: bipush        29
+     203: sipush        8198
+     206: iastore
+     207: dup
+     208: bipush        30
+     210: sipush        8199
+     213: iastore
+     214: dup
+     215: bipush        31
+     217: sipush        8200
+     220: iastore
+     221: dup
+     222: bipush        32
+     224: sipush        8201
+     227: iastore
+     228: dup
+     229: bipush        33
+     231: sipush        8202
+     234: iastore
+     235: dup
+     236: bipush        34
+     238: sipush        8600
+     241: iastore
+     242: dup
+     243: bipush        35
+     245: sipush        8601
+     248: iastore
+     249: dup
+     250: bipush        36
+     252: sipush        8602
+     255: iastore
+     256: dup
+     257: bipush        37
+     259: sipush        8603
+     262: iastore
+     263: dup
+     264: bipush        38
+     266: sipush        8604
+     269: iastore
+     270: dup
+     271: bipush        39
+     273: sipush        8605
+     276: iastore
+     277: dup
+     278: bipush        40
+     280: sipush        8606
+     283: iastore
+     284: dup
+     285: bipush        41
+     287: sipush        8607
+     290: iastore
+     291: dup
+     292: bipush        42
+     294: sipush        8608
+     297: iastore
+     298: dup
+     299: bipush        43
+     301: sipush        8609
+     304: iastore
+     305: dup
+     306: bipush        44
+     308: sipush        8610
+     311: iastore
+     312: dup
+     313: bipush        45
+     315: sipush        8611
+     318: iastore
+     319: dup
+     320: bipush        46
+     322: sipush        8612
+     325: iastore
+     326: dup
+     327: bipush        47
+     329: sipush        8613
+     332: iastore
+     333: dup
+     334: bipush        48
+     336: sipush        8614
+     339: iastore
+     340: dup
+     341: bipush        49
+     343: sipush        8786
+     346: iastore
+     347: dup
+     348: bipush        50
+     350: sipush        8622
+     353: iastore
+     354: dup
+     355: bipush        51
+     357: sipush        8623
+     360: iastore
+     361: dup
+     362: bipush        52
+     364: sipush        8624
+     367: iastore
+     368: dup
+     369: bipush        53
+     371: sipush        8625
+     374: iastore
+     375: dup
+     376: bipush        54
+     378: sipush        8626
+     381: iastore
+     382: dup
+     383: bipush        55
+     385: sipush        8627
+     388: iastore
+     389: dup
+     390: bipush        56
+     392: sipush        8628
+     395: iastore
+     396: dup
+     397: bipush        57
+     399: sipush        8629
+     402: iastore
+     403: dup
+     404: bipush        58
+     406: sipush        8630
+     409: iastore
+     410: dup
+     411: bipush        59
+     413: sipush        8631
+     416: iastore
+     417: dup
+     418: bipush        60
+     420: sipush        8632
+     423: iastore
+     424: dup
+     425: bipush        61
+     427: sipush        8633
+     430: iastore
+     431: dup
+     432: bipush        62
+     434: sipush        8634
+     437: iastore
+     438: dup
+     439: bipush        63
+     441: sipush        8635
+     444: iastore
+     445: dup
+     446: bipush        64
+     448: sipush        8636
+     451: iastore
+     452: dup
+     453: bipush        65
+     455: sipush        8637
+     458: iastore
+     459: dup
+     460: bipush        66
+     462: sipush        8638
+     465: iastore
+     466: dup
+     467: bipush        67
+     469: sipush        8639
+     472: iastore
+     473: dup
+     474: bipush        68
+     476: sipush        4679
+     479: iastore
+     480: dup
+     481: bipush        69
+     483: sipush        7906
+     486: iastore
+     487: dup
+     488: bipush        70
+     490: sipush        7907
+     493: iastore
+     494: dup
+     495: bipush        71
+     497: sipush        7908
+     500: iastore
+     501: dup
+     502: bipush        72
+     504: sipush        7909
+     507: iastore
+     508: dup
+     509: bipush        73
+     511: sipush        7910
+     514: iastore
+     515: dup
+     516: bipush        74
+     518: sipush        7911
+     521: iastore
+     522: dup
+     523: bipush        75
+     525: sipush        7912
+     528: iastore
+     529: dup
+     530: bipush        76
+     532: sipush        7913
+     535: iastore
+     536: dup
+     537: bipush        77
+     539: sipush        7914
+     542: iastore
+     543: dup
+     544: bipush        78
+     546: sipush        7915
+     549: iastore
+     550: dup
+     551: bipush        79
+     553: sipush        7916
+     556: iastore
+     557: dup
+     558: bipush        80
+     560: sipush        7917
+     563: iastore
+     564: dup
+     565: bipush        81
+     567: sipush        8030
+     570: iastore
+     571: dup
+     572: bipush        82
+     574: sipush        8031
+     577: iastore
+     578: dup
+     579: bipush        83
+     581: sipush        8032
+     584: iastore
+     585: dup
+     586: bipush        84
+     588: sipush        8033
+     591: iastore
+     592: putstatic     #20                 // Field ITEM_IDS:[I
+     595: return
+}
