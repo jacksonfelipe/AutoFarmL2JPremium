@@ -13,19 +13,17 @@ public class AutoHealFarmTask extends BaseFarmTask implements Runnable {
   }
   
   protected boolean doTryUseLowLifeSkillSpell() {
-	  L2Skill skill = getAutoFarmContext().nextHealSkill(getCommittedTarget(), (L2Character)getCommittedOwner());
+    L2Skill skill = getAutoFarmContext().nextHealSkill(getCommittedTarget(), (L2Character)getCommittedOwner());
     if (skill != null) {
-      useMagicSkill(skill, (skill.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF));
-      return true;
+      return useMagicSkill(skill, (skill.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF));
     } 
     return false;
   }
   
   protected boolean doTryUseSelfSkillSpell() {
-	  L2Skill skill = getAutoFarmContext().nextSelfSkill((L2Character)getCommittedOwner());
+    L2Skill skill = getAutoFarmContext().nextSelfSkill((L2Character)getCommittedOwner());
     if (skill != null) {
-      useMagicSkill(skill, (skill.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF));
-      return true;
+      return useMagicSkill(skill, (skill.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF));
     } 
     return false;
   }

@@ -50,6 +50,10 @@ public abstract class BaseFarmTask implements Runnable {
 
 	private Pair<ScheduledFuture<?>, Location> NC;
 
+	// A failed/interrupted cast can leave the player AI in CAST state. The client
+	// clears it when the player moves, but AutoFarm must recover on its own.
+	private long ND = 0L;
+
 	public BaseFarmTask(AutoFarmContext paramAutoFarmContext) {
 		this.Nw = paramAutoFarmContext;
 	}
@@ -118,7 +122,8 @@ public abstract class BaseFarmTask implements Runnable {
             if (this.spoilCheck()) {
                 return false;
             }
-            if (!committedTarget.isDead() && GeoEngine.getInstance().canSeeTarget(player, committedTarget)) {
+            if (!committedTarget.isDead() && committedTarget.isVisible()
+                    && committedTarget.isAutoAttackable(player)) {
                 if (player.getTarget() != committedTarget) {
                     player.setTarget(committedTarget);
                     player.sendPacket(new MyTargetSelected(committedTarget.getObjectId(),
@@ -179,13 +184,13 @@ public abstract class BaseFarmTask implements Runnable {
             }
         } else {
             if (this.getAutoFarmContext().isLeaderAssist()) {
-                if (player.getParty() != null && player.getParty().getLeader().getTarget() != null) {
-                    L2Object mobTarget = player.getParty().getLeader().getTarget();
-                    if (mobTarget instanceof L2MonsterInstance && !((L2MonsterInstance) mobTarget).isDead()) {
-                        this.setCommittedTarget((L2MonsterInstance) mobTarget);
+                if (player.getParty() != null && player.getParty().getLeader() != null) {
+                    L2MonsterInstance mobTarget = this.getAutoFarmContext().getLeaderTarget(player.getParty().getLeader());
+                    if (mobTarget != null && GeoEngine.getInstance().canSeeTarget(player, mobTarget)) {
+                        this.setCommittedTarget(mobTarget);
                         player.setTarget(mobTarget);
                         player.sendPacket(new MyTargetSelected(mobTarget.getObjectId(), 0));
-                        player.sendPacket(((L2Character) mobTarget).makeStatusUpdate(9, 10));
+                        player.sendPacket(mobTarget.makeStatusUpdate(9, 10));
                         return true;
                     }
                 }
@@ -196,24 +201,46 @@ public abstract class BaseFarmTask implements Runnable {
             }
 
             final List<L2MonsterInstance> aroundNpc = getAutoFarmContext().getAroundNpc(player,
-                    npcInstance -> GeoEngine.getInstance().canSeeTarget(player, npcInstance) && !npcInstance.isDead());
+                    npcInstance -> !npcInstance.isDead() && npcInstance.isAutoAttackable(player));
 
-            if (aroundNpc.isEmpty() && this.cD() || aroundNpc.size() == 0) {
+            if (aroundNpc.isEmpty()) {
+                this.setCommittedTarget(null);
+                this.cD();
                 player.setTarget(null);
                 player.sendPacket(new TargetUnselected(player));
+                if (!player.isCastingNow() && !player.isCastingSimultaneouslyNow()) {
+                    player.abortAttack();
+                    player.getAI().setIntention(CtrlIntention.ACTIVE);
+                }
                 return false;
             }
 
-            ArrayList<Double> dists = new ArrayList<Double>();
-
-            for (L2Npc npc : aroundNpc) {
-                dists.add(player.getDistance(npc.getX(), npc.getY()));
+            // Prefer mobs that are already in sight, but do not stop farming just
+            // because a farther mob requires walking around an obstacle.
+            L2MonsterInstance mob = null;
+            boolean hasLineOfSight = false;
+            boolean isAttackingPlayer = false;
+            double shortestDistance = Double.MAX_VALUE;
+            for (L2MonsterInstance candidate : aroundNpc) {
+                final boolean canSeeCandidate = GeoEngine.getInstance().canSeeTarget(player, candidate);
+                final boolean candidateIsAttackingPlayer = candidate.getTarget() == player;
+                final double distance = player.getDistance(candidate.getX(), candidate.getY());
+                // When several mobs are attacking, first remove the pressure
+                // from monsters already focused on this player. This mirrors
+                // retail Auto Hunt target priority and avoids chasing an idle
+                // distant mob while being surrounded.
+                if (mob == null || (candidateIsAttackingPlayer && !isAttackingPlayer)
+                        || (candidateIsAttackingPlayer == isAttackingPlayer && canSeeCandidate && !hasLineOfSight)
+                        || (candidateIsAttackingPlayer == isAttackingPlayer && canSeeCandidate == hasLineOfSight
+                                && distance < shortestDistance)) {
+                    mob = candidate;
+                    hasLineOfSight = canSeeCandidate;
+                    isAttackingPlayer = candidateIsAttackingPlayer;
+                    shortestDistance = distance;
+                }
             }
-
-            int minIndex = minIndex(dists);
-            L2MonsterInstance mob = aroundNpc.get(minIndex);
             
-            if (!mob.isDead()) {
+            if (mob != null && !mob.isDead()) {
                 player.setTarget(this.setCommittedTarget(mob));
                 player.sendPacket(new MyTargetSelected(mob.getObjectId(),
                         player.getLevel() - mob.getLevel()));
@@ -248,15 +275,16 @@ public abstract class BaseFarmTask implements Runnable {
 		if (player == null)
 			return;
 
-		if (paramBoolean && getCommittedTarget() != null) {
-
-			physicalAttack();
-			tryUseSpell(paramBoolean);
-
-		}
+		boolean skillStarted = false;
+		if (paramBoolean && getCommittedTarget() != null)
+			skillStarted = tryUseSpell(true);
 		if (paramBoolean && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills())
 			tryUseSummonSpell();
-		if (paramBoolean && getCommittedTarget() != null)
+		// useMagic() can accept a cast just before isCastingNow() becomes true.
+		// Do not overwrite that fresh cast with an ATTACK intention in the same
+		// farm tick; only fall back to the physical attack when no skill started.
+		if (paramBoolean && getCommittedTarget() != null && !skillStarted && !player.isCastingNow()
+				&& !player.isCastingSimultaneouslyNow())
 			physicalAttack();
 	}
 
@@ -272,20 +300,33 @@ public abstract class BaseFarmTask implements Runnable {
 						player.getLevel() - getCommittedTarget().getLevel()));
 				player.sendPacket((L2GameServerPacket) getCommittedTarget().makeStatusUpdate(new int[] { 9, 10 }));
 			}
-			if (GeoData.getInstance().canSeeTarget((L2Object) player, (L2Object) getCommittedTarget())) {
+			// Do not resend ATTACK for the same target on every farm tick. The player
+			// AI treats that as ActionFailed, which interrupts an otherwise valid
+			// auto-attack when the interval is short.
+			if (player.getAI().getIntention() != CtrlIntention.ATTACK
+					|| player.getAI().getAttackTarget() != getCommittedTarget()) {
 				player.getAI().setIntention(CtrlIntention.ATTACK, getCommittedTarget());
-			} else if (!getCommittedTarget().isInsideRadius(player, 200, true, false)
-					&& player.getAI().getIntention() != CtrlIntention.INTERACT) {
-				player.getAI().setIntention(CtrlIntention.INTERACT, getCommittedTarget(), null);
 			}
+		}
+	}
+
+	protected void moveCloserToCommittedTarget(int desiredRange) {
+		final L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
+		final L2MonsterInstance target = getCommittedTarget();
+		if (player == null || target == null || target.isAlikeDead() || player.isCastingNow()
+				|| player.isCastingSimultaneouslyNow() || player.isMoving()) {
+			return;
+		}
+
+		if (!target.isInsideRadius(player, desiredRange, true, false)) {
+			player.moveToLocation(target.getX(), target.getY(), target.getZ(), Math.max(50, desiredRange - 50));
 		}
 	}
 
 	protected boolean doTryUseLowLifeSkillSpell() {
 		L2Skill skill = getAutoFarmContext().nextHealSkill(getCommittedTarget(), null);
 		if (skill != null) {
-			useMagicSkill(skill, !skill.isOffensive());
-			return true;
+			return useMagicSkill(skill, !skill.isOffensive());
 		}
 		return false;
 	}
@@ -294,8 +335,7 @@ public abstract class BaseFarmTask implements Runnable {
 
 		L2Skill skill = getAutoFarmContext().nextSelfSkill(null);
 		if (skill != null) {
-			useMagicSkill(skill, true);
-			return true;
+			return useMagicSkill(skill, true);
 		}
 		return false;
 	}
@@ -305,8 +345,7 @@ public abstract class BaseFarmTask implements Runnable {
 		L2Skill skill = getAutoFarmContext().nextChanceSkill(getCommittedTarget(), getExtraDelay());
 
 		if (skill != null) {
-			useMagicSkill(skill, false);
-			return true;
+			return useMagicSkill(skill, false);
 		}
 		return false;
 	}
@@ -315,25 +354,25 @@ public abstract class BaseFarmTask implements Runnable {
 
 		L2Skill skill = getAutoFarmContext().nextAttackSkill(getCommittedTarget(), getExtraDelay());
 		if (skill != null) {
-			useMagicSkill(skill, false);
-			return true;
+			return useMagicSkill(skill, false);
 		}
 		return false;
 	}
 
-	protected void tryUseSpell(boolean paramBoolean) {
+	protected boolean tryUseSpell(boolean paramBoolean) {
 
 		L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
 		if (player == null || player.isCastingNow())
-			return;
-		if (paramBoolean)
-			doTryUseChanceSkillSpell();
+			return false;
+		if (paramBoolean && doTryUseChanceSkillSpell())
+			return true;
 		if (doTryUseLowLifeSkillSpell())
-			return;
+			return true;
 		if (doTryUseSelfSkillSpell())
-			return;
+			return true;
 		if (paramBoolean)
-			doTryUseAttackSkillSpell();
+			return doTryUseAttackSkillSpell();
+		return false;
 	}
 
 	protected void tryUseSummonSpell() {
@@ -366,13 +405,50 @@ public abstract class BaseFarmTask implements Runnable {
 		Location location = Location.findPointToStay(new Location(k, m, paramCreature.getZ()), paramInt2, 1);
 //    for (byte b = 0; b < 10 && !GeoData.getInstance().canSeeTarget(paramL2Object, paramCreature)))
 //      location = Location.findPointToStay(new Location(k, m, paramCreature.getZ()), paramInt2, 0); 
-		Pair<ScheduledFuture<?>, Location> pair = null;
-//    return (paramCreature.isMoving() && paramCreature.getXdestination() != 0 && 
-//    		paramCreature.getXdestination().distance(k, m) <= (paramInt2 * 2)) ? null : (((pair = moveToAndThan(paramCreature, location, paramRunnable)) != null) ? pair : null);
-		return pair;
+		return moveToAndThan(paramCreature, location, paramRunnable);
 	}
 
 	protected boolean preDoUseMagicSkill(L2Skill paramSkill, boolean paramBoolean) {
+		return true;
+	}
+
+	private boolean recoverStuckCast(L2PcInstance player) {
+		if (player == null) {
+			return false;
+		}
+
+		if (!player.isCastingNow() && !player.isCastingSimultaneouslyNow()) {
+			ND = 0L;
+			if (player.getAI().getIntention() == CtrlIntention.CAST) {
+				player.getAI().setIntention(CtrlIntention.ACTIVE);
+			}
+			return false;
+		}
+
+		final long now = System.currentTimeMillis();
+		if (ND == 0L) {
+			ND = now;
+			return false;
+		}
+
+		long maximumCastTime = 2500L;
+		if (player.getCurrentSkill() != null && player.getCurrentSkill().getSkill() != null) {
+			final L2Skill currentSkill = player.getCurrentSkill().getSkill();
+			maximumCastTime = Math.max(maximumCastTime,
+					currentSkill.getHitTime() + currentSkill.getCoolTime() + 1500L);
+		}
+		maximumCastTime = Math.min(maximumCastTime, 10000L);
+
+		if (now - ND < maximumCastTime) {
+			return false;
+		}
+
+		// The scheduled cast did not finish. Abort it exactly as a player movement
+		// would, restore a clean AI state and let the next farm tick choose a skill.
+		player.abortCast();
+		player.getAI().setIntention(CtrlIntention.ACTIVE);
+		restoreTarget(player);
+		ND = 0L;
 		return true;
 	}
 
@@ -392,49 +468,54 @@ public abstract class BaseFarmTask implements Runnable {
 		}
 	}
 
-	protected final void useMagicSkill(L2Skill paramSkill, boolean paramBoolean) {
+	protected final boolean useMagicSkill(L2Skill paramSkill, boolean paramBoolean) {
 	
 		L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
 		if (paramSkill == null || player == null || player.isOutOfControl()
 				|| (paramSkill.isToggle() && player.isMounted()))
-			return;
+			return false;
 		
-		// Prevent skill queue overflow - don't use skill if player is casting or attacking
-		if (player.isCastingNow() || player.isAttackingNow()) {
+		// AutoFarm owns the combat rotation: never queue a new cast, but interrupt
+		// its own physical swing so a configured skill can be used immediately.
+		if (player.isCastingNow() || player.isCastingSimultaneouslyNow()) {
 			restoreTarget(player);
-			return;
+			return false;
+		}
+		if (player.isAttackingNow()) {
+			player.abortAttack();
 		}
 		
 		if (preDoUseMagicSkill(paramSkill, paramBoolean)) {
-			if (getAutoFarmContext().isExtraDelaySkill())
-				setExtraDelay(System.currentTimeMillis() + AutoFarmConfig.SKILLS_EXTRA_DELAY);
-			b(paramSkill, paramBoolean);
+			if (b(paramSkill, paramBoolean)) {
+				ND = System.currentTimeMillis();
+				if (getAutoFarmContext().isExtraDelaySkill())
+					setExtraDelay(System.currentTimeMillis() + AutoFarmConfig.SKILLS_EXTRA_DELAY);
+				return true;
+			}
 		} else {
 			restoreTarget(player);
 		}
+		return false;
 	}
 
-	private void b(L2Skill paramSkill, boolean paramBoolean) {
+	private boolean b(L2Skill paramSkill, boolean paramBoolean) {
 
 		L2PcInstance player = getAutoFarmContext().getP().getActingPlayer();
 		if (paramSkill == null || player == null || player.isOutOfControl())
-			return;
+			return false;
 		
-		// Prevent skill queue overflow - check if player is busy
-		if (player.isCastingNow() || player.isAttackingNow() || player.isCastingSimultaneouslyNow()) {
+		// The physical attack was already interrupted by useMagicSkill(). Do not
+		// enqueue skills while a normal or simultaneous cast is still active.
+		if (player.isCastingNow() || player.isCastingSimultaneouslyNow()) {
 			restoreTarget(player);
-			return;
+			return false;
 		}
 		
-		// Check if skill is still on cooldown (skip if not ready)
+		// The normal cooldown remains authoritative. Fast reuse schedules an earlier
+		// enable only after a successful AutoFarm cast.
 		if (player.isSkillDisabled(paramSkill.getId())) {
-			// Apply fast reuse if configured
-			if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
-				player.enableSkill(paramSkill.getId());
-			} else {
-				restoreTarget(player);
-				return; // Skill not ready, skip
-			}
+			restoreTarget(player);
+			return false;
 		}
 		
 		if (paramBoolean) {
@@ -445,26 +526,29 @@ public abstract class BaseFarmTask implements Runnable {
 			
 			player.setTarget(skillTarget);
 			player.useMagic(paramSkill, true, false);
+			getAutoFarmContext().scheduleFastReuse(player, paramSkill);
 			
 			restoreTarget(player);
-			return;
+			return true;
 		}
 		
 		if (player.getTarget() == null) {
 			restoreTarget(player);
-			return;
+			return false;
 		}
 
 		L2Character creature = paramSkill.getFirstOfTargetList(player);
-		if(!paramSkill.checkCondition(player, creature)){
+		if (creature == null || creature.isAlikeDead() || !paramSkill.checkCondition(player, creature, false)) {
 			restoreTarget(player);
-			return;
+			return false;
 		}
 
 		player.setTarget(creature);
 		player.useMagic(paramSkill, true, false);
+		getAutoFarmContext().scheduleFastReuse(player, paramSkill);
 		
 		restoreTarget(player);
+		return true;
 	}
 
 	protected L2MonsterInstance getCommittedTarget() {
@@ -525,6 +609,9 @@ public abstract class BaseFarmTask implements Runnable {
 				}
 			}
 			getAutoFarmContext().checkAndUsePotions(player);
+			if (recoverStuckCast(player)) {
+				return;
+			}
 			runImpl();
 		} catch (Throwable throwable) {
 			_log.error("Exception: RunnableImpl.run(): " + throwable, throwable);

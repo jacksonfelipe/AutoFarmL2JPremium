@@ -148,24 +148,35 @@ public class AutoFarmContext
         return skill.getSkillType() == L2SkillType.HEAL || skill.getSkillType() == L2SkillType.HEAL_PERCENT;
     }
     
-    private void applyFastReuse(final L2PcInstance player, final L2Skill skill) {
-        if (player == null || skill == null) {
+    /**
+     * Applies the configured cooldown reduction after an AutoFarm cast has
+     * started. The core still validates cast state, MP and target conditions.
+     */
+    public void scheduleFastReuse(final L2Character caster, final L2Skill skill) {
+        if (caster == null || skill == null || AutoFarmConfig.FAST_SKILL_REUSE <= 0) {
             return;
         }
-        // Fast skill reuse - enable skill immediately if configured at 100%
-        if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
-            player.enableSkill(skill.getId());
+
+        long normalReuse = skill.getReuseDelay();
+        if (!skill.isStaticReuse() && !skill.isPotion()) {
+            normalReuse *= skill.isMagic() ? caster.getStat().getMReuseRate(skill)
+                    : caster.getStat().getPReuseRate(skill);
+            normalReuse *= 333.0 / (skill.isMagic() ? caster.getMAtkSpd() : caster.getPAtkSpd());
         }
-    }
-    
-    private void applyFastReuseSummon(final L2Summon summon, final L2Skill skill) {
-        if (summon == null || skill == null) {
+        if (normalReuse <= 10L) {
             return;
         }
-        // Fast skill reuse for summon - enable skill immediately if configured at 100%
-        if (AutoFarmConfig.FAST_SKILL_REUSE >= 100) {
-            summon.enableSkill(skill.getId());
-        }
+
+        final long reducedReuse = Math.max(10L,
+                normalReuse * (100L - AutoFarmConfig.FAST_SKILL_REUSE) / 100L);
+        ThreadPoolManager.getInstance().scheduleGeneral(new Runnable() {
+            @Override
+            public void run() {
+                if (!caster.isAlikeDead()) {
+                    caster.enableSkill(skill.getId());
+                }
+            }
+        }, reducedReuse);
     }
     
     public L2Playable getP() {
@@ -429,7 +440,11 @@ public class AutoFarmContext
                 break;
             }
         }
-        if (list != null && !list.isEmpty()) {
+        if (list != null) {
+            if (list.isEmpty()) {
+                player.unsetVar(s);
+                return;
+            }
             String string = "";
             final Iterator<Integer> iterator = list.iterator();
             while (iterator.hasNext()) {
@@ -1094,11 +1109,16 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            // Apply fast skill reuse before checking condition (non-random mode)
-            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
-                applyFastReuse(player, knownSkill);
+            // The attack rotation must never select buffs, heals or utility
+            // skills. Those belong to their dedicated lists and otherwise can
+            // leave a mage idle while surrounded by monsters.
+            if (!knownSkill.isOffensive()) {
+                continue;
             }
-            if (!knownSkill.checkCondition(player, target)) {
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
+            }
+            if (!knownSkill.checkCondition(player, target, false)) {
                 continue;
             }
             if (knownSkill.isOffensive() && knownSkill.getTargetType() == L2Skill.SkillTargetType.TARGET_ONE && target == null) {
@@ -1127,6 +1147,12 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
+            if (!knownSkill.isOffensive()) {
+                continue;
+            }
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
+            }
             if(target.isPlayer() && target.getObjectId() == player.getObjectId()) {
             	player.sendMessage("You cannot attack yourself...");
             	continue;
@@ -1138,7 +1164,7 @@ public class AutoFarmContext
                     continue;
                 }
             }
-            if (!knownSkill.checkCondition(player, target)) {
+            if (!knownSkill.checkCondition(player, target, false)) {
                 player.setVar("targetUnskill", target.getObjectId() + "_" + knownSkill.getId() );
                 continue;
             }
@@ -1181,11 +1207,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            // Apply fast skill reuse before checking condition
-            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
-                applyFastReuse(player, knownSkill);
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
             }
-            if (!knownSkill.checkCondition(player, npcInstance)) {
+            if (!knownSkill.checkCondition(player, npcInstance, false)) {
                 continue;
             }
             if (knownSkill.isSpoilSkill() && npcInstance.isSpoil()) {
@@ -1214,7 +1239,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            if (!knownSkill.checkCondition(player, npcInstance)) {
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
+            }
+            if (!knownSkill.checkCondition(player, npcInstance, false)) {
                 continue;
             }
             if (knownSkill.isSpoilSkill() && npcInstance.isSpoil()) {
@@ -1252,11 +1280,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            // Apply fast skill reuse before checking condition
-            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
-                applyFastReuse(player, knownSkill);
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
             }
-            if (!knownSkill.checkCondition((L2Character)player, (target != null) ? target : player)) {
+            if (!knownSkill.checkCondition((L2Character)player, (target != null) ? target : player, false)) {
                 continue;
             }
             if (knownSkill.isToggle() && player.getFirstEffect(knownSkill) == null) {
@@ -1287,7 +1314,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            if (!knownSkill.checkCondition(player, (target != null) ? target : player)) {
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
+            }
+            if (!knownSkill.checkCondition(player, (target != null) ? target : player, false)) {
                 continue;
             }
             
@@ -1350,11 +1380,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            // Apply fast skill reuse before checking condition
-            if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && player.isSkillDisabled(knownSkill.getId())) {
-                applyFastReuse(player, knownSkill);
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
             }
-            if (!knownSkill.checkCondition(player, knownSkill.isOffensive() ? npcInstance : player)) {
+            if (!knownSkill.checkCondition(player, knownSkill.isOffensive() ? npcInstance : player, false)) {
                 continue;
             }
             if (knownSkill.isOffensive() && npcInstance == null) {
@@ -1415,7 +1444,10 @@ public class AutoFarmContext
             if (knownSkill == null) {
                 continue;
             }
-            if (!knownSkill.checkCondition(player, knownSkill.isOffensive() ? npcInstance : player)) {
+            if (player.isSkillDisabled(knownSkill.getId())) {
+                continue;
+            }
+            if (!knownSkill.checkCondition(player, knownSkill.isOffensive() ? npcInstance : player, false)) {
                 continue;
             }
             if (knownSkill.isOffensive() && npcInstance == null) {
@@ -1489,22 +1521,20 @@ public class AutoFarmContext
             return this.a(npcInstance, summon);
         }
         for (final int intValue : this.getSummonAttackSpells()) {
-            final int availableSkillLevel = summon.getAllSkills().length;
-  
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                // Apply fast skill reuse for summon before checking condition
-                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && summon.isSkillDisabled(info.getId())) {
-                    applyFastReuseSummon(summon, info);
+                final L2Skill info = summon.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
                 }
-                if (!info.checkCondition(summon, npcInstance)) {
+                if (summon.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(summon, npcInstance, false)) {
                     continue;
                 }
                 if (info.isOffensive() && info.getTargetType() == L2Skill.SkillTargetType.TARGET_ONE && npcInstance == null) {
                     continue;
                 }
                 return info;
-            }
         }
         return null;
     }
@@ -1513,17 +1543,20 @@ public class AutoFarmContext
         final ArrayList<L2Skill> list = new ArrayList<L2Skill>();
         L2Skill skill = null;
         for (final int intValue : this.getSummonAttackSpells()) {
-            final int availableSkillLevel = summon.getAllSkills().length;
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                if (!info.checkCondition(summon, npcInstance)) {
+                final L2Skill info = summon.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
+                }
+                if (summon.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(summon, npcInstance, false)) {
                     continue;
                 }
                 if (info.isOffensive() && info.getTargetType() ==L2Skill.SkillTargetType.TARGET_ONE && npcInstance == null) {
                     continue;
                 }
                 list.add(info);
-            }
         }
         if (!list.isEmpty()) {
             skill = list.get(Rnd.get(list.size()));
@@ -1543,14 +1576,14 @@ public class AutoFarmContext
             return this.a(summon, target);
         }
         for (final int intValue : this.getSummonSelfSpells()) {
-            final int availableSkillLevel = summon.getAllSkills().length;
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                // Apply fast skill reuse for summon before checking condition
-                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && summon.isSkillDisabled(info.getId())) {
-                    applyFastReuseSummon(summon, info);
+                final L2Skill info = summon.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
                 }
-                if (!info.checkCondition(summon, (target != null) ? target : summon)) {
+                if (summon.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(summon, (target != null) ? target : summon, false)) {
                     continue;
                 }
                 if (info.isToggle() && summon.getFirstEffect(info) == null) {
@@ -1564,7 +1597,6 @@ public class AutoFarmContext
                     return info;
                 }
                 continue;
-            }
         }
         return null;
     }
@@ -1573,11 +1605,15 @@ public class AutoFarmContext
         final ArrayList<L2Skill> list = new ArrayList<L2Skill>();
         final ArrayList<L2Skill> list2 = new ArrayList<L2Skill>();
         L2Skill skill = null;
-        for (final int intValue : this.getSelfSpells()) {
-            final int availableSkillLevel = target.getAllSkills().length;
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                if (!info.checkCondition(target, (target2 != null) ? target2 : target)) {
+        for (final int intValue : this.getSummonSelfSpells()) {
+                final L2Skill info = target.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
+                }
+                if (target.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(target, (target2 != null) ? target2 : target, false)) {
                     continue;
                 }
                 if (info.isToggle() && target.getFirstEffect(info) == null) {
@@ -1592,7 +1628,6 @@ public class AutoFarmContext
                     }
                     list.add(info);
                 }
-            }
         }
         boolean b = true;
         if (!list2.isEmpty()) {
@@ -1629,18 +1664,18 @@ public class AutoFarmContext
         if (!b && !b2 && !b3) {
             return null;
         }
-        if (this.isRndLifeSkills()) {
+        if (this.isRndSummonLifeSkills()) {
             return this.a(npcInstance, target, L2Character);
         }
         for (final int intValue : this.getSummonHealSpells()) {
-            final int availableSkillLevel = target.getAllSkills().length;
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                // Apply fast skill reuse for summon before checking condition
-                if (AutoFarmConfig.FAST_SKILL_REUSE > 0 && target.isSkillDisabled(info.getId())) {
-                    applyFastReuseSummon(target, info);
+                final L2Skill info = target.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
                 }
-                if (!info.checkCondition(target, (L2Character != null && b) ? L2Character : target)) {
+                if (target.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(target, (L2Character != null && b) ? L2Character : target, false)) {
                     continue;
                 }
                 if (info.isOffensive() && npcInstance == null) {
@@ -1672,7 +1707,6 @@ public class AutoFarmContext
                     }
                     return info;
                 }
-            }
         }
         return null;
     }
@@ -1690,10 +1724,14 @@ public class AutoFarmContext
             return null;
         }
         for (final int intValue : this.getSummonHealSpells()) {
-            final int availableSkillLevel = target.getAllSkills().length;
-            if (availableSkillLevel > 0) {
-                final L2Skill info = SkillTable.getInstance().getInfo(intValue, availableSkillLevel);
-                if (!info.checkCondition(target, (target2 != null && b) ? target2 : target)) {
+                final L2Skill info = target.getKnownSkill(intValue);
+                if (info == null) {
+                    continue;
+                }
+                if (target.isSkillDisabled(info.getId())) {
+                    continue;
+                }
+                if (!info.checkCondition(target, (target2 != null && b) ? target2 : target, false)) {
                     continue;
                 }
                 if (info.isOffensive() && npcInstance == null) {
@@ -1725,7 +1763,6 @@ public class AutoFarmContext
                     }
                     list.add(info);
                 }
-            }
         }
         if (!list.isEmpty()) {
             skill = list.get(Rnd.get(list.size()));
@@ -1744,9 +1781,16 @@ public class AutoFarmContext
     }
     
     public L2MonsterInstance getLeaderTarget(final L2PcInstance player) {
+        if (player == null) {
+            return null;
+        }
         final L2Object target = player.getTarget();
-        if (target != null && target != player && target instanceof L2NpcInstance && !((L2NpcInstance)target).isDead() && ((L2NpcInstance)target).hasAI() && (target.getActingPlayer().getAttackByList().contains(player))) {
-            return (L2MonsterInstance) target;
+        if (target instanceof L2MonsterInstance) {
+            final L2MonsterInstance monster = (L2MonsterInstance) target;
+            if (!monster.isDead() && monster.hasAI() && monster.isAutoAttackable(player)
+                    && monster.getAttackByList().contains(player)) {
+                return monster;
+            }
         }
         return null;
     }
@@ -1794,6 +1838,8 @@ public class AutoFarmContext
             return;
         }
         final long now = System.currentTimeMillis();
+
+        checkEmergencyHpRecovery(player);
         
         // HP Potion Check
         if (this.iAcpHpPercent > 0) {
@@ -1819,6 +1865,22 @@ public class AutoFarmContext
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Free continuous recovery while HP remains at or below the configured
+     * threshold. It does not consume an item and is independent from ACP.
+     */
+    private void checkEmergencyHpRecovery(final L2PcInstance player) {
+        if (!AutoFarmConfig.EMERGENCY_HP_RECOVERY_ENABLED || AutoFarmConfig.EMERGENCY_HP_RECOVERY_AMOUNT <= 0) {
+            return;
+        }
+
+        if (player.getCurrentHpPercents() <= AutoFarmConfig.EMERGENCY_HP_RECOVERY_PERCENT) {
+            final double recoveredHp = Math.min(player.getMaxHp(),
+                    player.getCurrentHp() + AutoFarmConfig.EMERGENCY_HP_RECOVERY_AMOUNT);
+            player.setCurrentHp(recoveredHp);
         }
     }
     

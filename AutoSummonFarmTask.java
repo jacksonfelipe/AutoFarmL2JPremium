@@ -30,7 +30,7 @@ public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
       return false; 
      L2Summon summon = getCommittedSummon();
     boolean bool = super.doTryUseAttackSkillSpell();
-    if ((this.Nx == 0L || this.Nx > System.currentTimeMillis()) && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
+    if (canUseSummonSkill() && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
       L2Skill skill = getAutoFarmContext().nextSummonAttackSkill(getCommittedTarget(), getCommittedSummon(), this.Nx);
       if (skill != null)
         a(skill, false); 
@@ -49,7 +49,7 @@ public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
       useMagicSkill(skill, !skill.isOffensive());
       bool = true;
     } 
-    if ((this.Nx == 0L || this.Nx > System.currentTimeMillis()) && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
+    if (canUseSummonSkill() && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
     	L2Skill skill1 = getAutoFarmContext().nextSummonHealSkill(getCommittedTarget(), getCommittedSummon(), (L2Character)player);
       if (skill1 != null)
         a(skill1, (skill1.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF)); 
@@ -68,7 +68,7 @@ public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
       useMagicSkill(skill, true);
       bool = true;
     } 
-    if ((this.Nx == 0L || this.Nx > System.currentTimeMillis()) && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
+    if (canUseSummonSkill() && summon != null && !summon.isDead() && getCommittedTarget() != null && getAutoFarmContext().isUseSummonSkills()) {
       L2Skill skill1 = getAutoFarmContext().nextSummonSelfSkill(getCommittedSummon(), (L2Character)player);
       if (skill1 != null)
         a(skill1, (skill1.getTargetType() == L2Skill.SkillTargetType.TARGET_SELF)); 
@@ -110,27 +110,36 @@ public class AutoSummonFarmTask extends BaseFarmTask implements Runnable {
       return; 
     if (summon.isOutOfControl())
       return; 
-    if (getAutoFarmContext().isExtraSummonDelaySkill())
+    if (trySummonUseMagic(paramSkill, paramBoolean) && getAutoFarmContext().isExtraSummonDelaySkill())
       this.Nx = System.currentTimeMillis() + AutoFarmConfig.SKILLS_EXTRA_DELAY; 
-    trySummonUseMagic(paramSkill, paramBoolean);
+  }
+
+  private boolean canUseSummonSkill() {
+    return this.Nx <= System.currentTimeMillis();
   }
   
-  public void trySummonUseMagic(L2Skill paramSkill, boolean paramBoolean) {
+  public boolean trySummonUseMagic(L2Skill paramSkill, boolean paramBoolean) {
      L2Summon summon = getCommittedSummon();
-    if (summon == null || paramSkill == null)
-      return; 
+    if (summon == null || paramSkill == null || summon.isCastingNow()
+        || summon.isAttackingNow() || summon.isSkillDisabled(paramSkill.getId()))
+      return false;
     if (paramBoolean) {
     L2Object gameObject = summon.getTarget();
       summon.setTarget((L2Object)summon);
       summon.doCast(paramSkill);
+      getAutoFarmContext().scheduleFastReuse(summon, paramSkill);
       summon.setTarget(gameObject);
-      return;
+      return true;
     } 
     if (summon.getTarget() == null)
-      return; 
+      return false;
     L2Character creature = paramSkill.getFirstOfTargetList(summon);
+    if (creature == null)
+      return false;
     summon.setTarget(creature);
     summon.doCast(paramSkill);
+    getAutoFarmContext().scheduleFastReuse(summon, paramSkill);
+    return true;
   }
 }
 

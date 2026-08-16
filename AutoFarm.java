@@ -442,15 +442,12 @@ public class AutoFarm implements IVoicedCommandHandler {
 						this.a(player, farmSystem, null, varInt, s27, s28);
 						return false;
 					}
-					final int availableSkillLevel = pet.getAllSkills().length;
-					if (availableSkillLevel > 0) {
-						int skillId = -1;
-						try {
-							skillId = Integer.parseInt(s26.trim());
-						} catch (Exception e) {}
-						
-						final L2Skill info = SkillTable.getInstance().getInfo(skillId,
-								availableSkillLevel);
+					int skillId = -1;
+					try {
+						skillId = Integer.parseInt(s26.trim());
+					} catch (Exception e) {}
+
+					final L2Skill info = pet.getKnownSkill(skillId);
 						if (info != null) {
 							final String s29 = s27;
 							switch (s29) {
@@ -502,7 +499,6 @@ public class AutoFarm implements IVoicedCommandHandler {
 							}
 							}
 						}
-					}
 				}
 				this.a(player, farmSystem, null, varInt, s27, s28);
 				return true;
@@ -591,6 +587,11 @@ public class AutoFarm implements IVoicedCommandHandler {
 						}
 						if (s31.equalsIgnoreCase("farmRunTargetCloseUp")) {
 							farmSystem.setRunTargetCloseUp(!farmSystem.isRunTargetCloseUp(), false);
+							b = true;
+							break;
+						}
+						if (s31.equalsIgnoreCase("farmDelaySkills")) {
+							farmSystem.setExDelaySkill(!farmSystem.isExtraDelaySkill(), false);
 							b = true;
 							break;
 						}
@@ -1905,7 +1906,7 @@ public class AutoFarm implements IVoicedCommandHandler {
 		if (list != null && !list.isEmpty()) {
 			final ArrayList<Object> list2 = new ArrayList<Object>();
 			for (final int intValue : list) {
-				if (intValue > 0 && player.getPet().getAllSkills().length == 0) {
+				if (intValue <= 0 || player.getPet().getKnownSkill(intValue) == null) {
 					list2.add(intValue);
 				}
 			}
@@ -1915,6 +1916,7 @@ public class AutoFarm implements IVoicedCommandHandler {
 					list.remove(iterator2.next());
 				}
 				list2.clear();
+				autoFarmContext.saveSkills(str);
 			}
 		}
 		final String notNull5 = HtmCache.getInstance().getHtm("data/html/command/autofarm/summon_skill-template.htm");
@@ -1927,11 +1929,11 @@ public class AutoFarm implements IVoicedCommandHandler {
 			if (list != null && list.size() > 0 && i < list.size()) {
 				final int intValue2 = list.get(i);
 				if (intValue2 > 0) {
-					final int availableSkillLevel = player.getPet().getAllSkills().length;
-					if (availableSkillLevel > 0) {
+					final L2Skill skill = player.getPet().getKnownSkill(intValue2);
+					if (skill != null) {
 						str3 = s5
 								.replace("%icon%",
-										SkillTable.getInstance().getInfo(intValue2, availableSkillLevel).getIcon())
+										skill.getIcon())
 								.replace("%background%", "").replace("%bypass%",
 										"bypass -h voice_removeSummonSkill " + str + " " + intValue2 + " " + str2);
 					} else {

@@ -94,6 +94,12 @@ public class AutoFarmConfig {
 
 	public static int[] ACP_MP_POTION_IDS;
 
+	public static boolean EMERGENCY_HP_RECOVERY_ENABLED;
+
+	public static int EMERGENCY_HP_RECOVERY_PERCENT;
+
+	public static int EMERGENCY_HP_RECOVERY_AMOUNT;
+
 	public static AbnormalEffect SERVICES_AUTO_FARM_ABNORMAL = AbnormalEffect.NULL;
 
 	public static boolean SERVICE_AUTO_FARM_SET_RED_RING;
@@ -145,7 +151,8 @@ public class AutoFarmConfig {
 			FARM_TYPE = Integer.parseInt(exProperties.getProperty("AutoFarmType", "0"));
 			FARM_INTERVAL_TASK = Integer.parseInt(exProperties.getProperty("AutoFarmIntervalTask", "600"));
 			SKILLS_EXTRA_DELAY = Long.parseLong(exProperties.getProperty("SkillsExtraDelay", "5")) * 1000L;
-			FAST_SKILL_REUSE = Integer.parseInt(exProperties.getProperty("FastSkillReuse", "90"));
+			FAST_SKILL_REUSE = Math.max(0, Math.min(100,
+					Integer.parseInt(exProperties.getProperty("FastSkillReuse", "0"))));
 			KEEP_LOCATION_DELAY = Long.parseLong(exProperties.getProperty("KeepLocationDelay", "5")) * 1000L;
 			RUN_CLOSE_UP_DELAY = Long.parseLong(exProperties.getProperty("RunCloseUpDelay", "2")) * 1000L;
 			RUN_CLOSE_UP_DISTANCE = Integer.parseInt(exProperties.getProperty("RunCloseUpDistance", "100"));
@@ -180,8 +187,16 @@ public class AutoFarmConfig {
 
 			SERVICE_AUTO_FARM_SET_RED_RING = Boolean
 					.parseBoolean(exProperties.getProperty("AutoFarmSetRedRing", "false"));
-			AUTO_FARM_LIMIT_ZONE_NAMES = new HashSet<>(Arrays.asList(
-					exProperties.getProperty("AutoFarmProhibitedZones", "[giran_town_peace1],[giran_town_peace2]")));
+			AUTO_FARM_LIMIT_ZONE_NAMES.clear();
+			for (String zoneName : exProperties.getProperty("AutoFarmProhibitedZones", "").split(",")) {
+				zoneName = zoneName.trim();
+				if (zoneName.startsWith("[") && zoneName.endsWith("]") && zoneName.length() > 2) {
+					zoneName = zoneName.substring(1, zoneName.length() - 1).trim();
+				}
+				if (!zoneName.isEmpty()) {
+					AUTO_FARM_LIMIT_ZONE_NAMES.add(zoneName);
+				}
+			}
 			String[] arrayOfString2 = exProperties.getProperty("FarmExpendLimitPrice", "4037,1").split(",");
 
 			FARM_EXPEND_LIMIT_PRICE[0] = Integer.parseInt(arrayOfString2[0]);
@@ -198,6 +213,12 @@ public class AutoFarmConfig {
 			for (int i = 0; i < mpPotions.length; i++) {
 				ACP_MP_POTION_IDS[i] = Integer.parseInt(mpPotions[i].trim());
 			}
+
+			EMERGENCY_HP_RECOVERY_ENABLED = Boolean.parseBoolean(exProperties.getProperty("EmergencyHpRecoveryEnabled", "True"));
+			EMERGENCY_HP_RECOVERY_PERCENT = Math.max(1, Math.min(100,
+					Integer.parseInt(exProperties.getProperty("EmergencyHpRecoveryPercent", "50"))));
+			EMERGENCY_HP_RECOVERY_AMOUNT = Math.max(0,
+					Integer.parseInt(exProperties.getProperty("EmergencyHpRecoveryAmount", "500")));
 
 		 } catch (Exception e) {
 			_log.error(e.getMessage(), e);
